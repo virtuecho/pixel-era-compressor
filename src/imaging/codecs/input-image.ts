@@ -26,6 +26,9 @@ type RasterContext =
   | CanvasRenderingContext2D
   | OffscreenCanvasRenderingContext2D;
 
+// File picker hint shared by the main uploader and the empty preview upload
+// target. HEIC/HEIF are included even though many browsers cannot decode them
+// natively because this module provides the compatibility decode path.
 export const supportedInputImageAccept = [
   "image/jpeg",
   "image/png",
@@ -97,6 +100,8 @@ export async function createDisplayableInputPreviewBlob(
   input: Blob,
 ): Promise<Blob> {
   if (!(await isHeicContainerBlob(input))) {
+    // Browser-native formats can be previewed from the original Blob URL, which
+    // is faster and avoids unnecessary recompression.
     return input;
   }
 
@@ -121,6 +126,9 @@ export function readIsoBmffBrands(header: Uint8Array): readonly string[] {
 
   const brands = [readAscii(header, 8, 12)];
 
+  // ISO BMFF stores one primary brand followed by compatible brands. Scanning
+  // those four-character codes is enough to distinguish HEIC-like files from
+  // AVIF before handing bytes to an image decoder.
   for (let offset = 16; offset + 4 <= header.length; offset += 4) {
     const brand = readAscii(header, offset, offset + 4);
 
@@ -142,6 +150,8 @@ function readAscii(
 
 async function decodeHeicInputImage(input: Blob): Promise<ImageBitmap> {
   try {
+    // Dynamic import keeps the large HEIC decoder out of the initial app bundle
+    // until a HEIC/HEIF file actually needs it.
     const { heicTo } = await import("heic-to/next");
     return await heicTo({ blob: input, type: "bitmap" });
   } catch (error) {
@@ -193,6 +203,8 @@ function resolvePreviewSize(
   sourceWidth: number,
   sourceHeight: number,
 ): { readonly width: number; readonly height: number } {
+  // The original pane only needs screen-scale pixels. Capping the long edge
+  // keeps HEIC preview fallbacks from becoming huge JPEGs on high-MP photos.
   const scale = Math.min(
     1,
     previewMaxEdgePx / Math.max(sourceWidth, sourceHeight),
@@ -219,6 +231,8 @@ function createRasterCanvas(width: number, height: number): RasterCanvas {
   throw new Error("Canvas preview encoding is not available.");
 }
 
+// Preview encoding runs in app UI code, so it supports both OffscreenCanvas and
+// DOM canvas depending on what the browser exposes.
 function getRasterContext(canvas: RasterCanvas): RasterContext {
   const context = canvas.getContext("2d");
 

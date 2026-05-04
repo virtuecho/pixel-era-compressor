@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+// Husky passes the temporary commit-message file path as the first argument.
 const messagePath = process.argv.at(2);
 
 if (messagePath === undefined) {
@@ -8,6 +9,8 @@ if (messagePath === undefined) {
 }
 
 const firstLine = readFileSync(messagePath, "utf8").split(/\r?\n/u)[0] ?? "";
+// Keep local commits aligned with docs/engineering/COMMIT_CONVENTION.md while
+// still allowing standard Git-generated merge and revert headers.
 const conventionalHeader =
   /^(feat|fix|refactor|perf|style|test|docs|build|ops|chore)(?:\([a-z0-9-]+\))?!?: [a-z].*[^.]$/u;
 const allowedGitGeneratedHeader =

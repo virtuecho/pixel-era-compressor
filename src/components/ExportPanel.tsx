@@ -1,6 +1,8 @@
 import { Download } from "lucide-react";
 import type { ReactElement } from "react";
 
+// Small export control wrapper. App owns the Blob URL and filename; this
+// component only switches between disabled button and browser download link.
 export type ExportPanelProps = {
   readonly outputUrl: string | null;
   readonly filename: string;

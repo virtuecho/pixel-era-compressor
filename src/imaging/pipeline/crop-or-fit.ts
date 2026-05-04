@@ -34,6 +34,8 @@ export function computeCropOrFitPlan(
   const targetRatio = target.width / target.height;
 
   if (cropMode === "fit-inside") {
+    // Preserve the whole input inside the target. Any unused target area remains
+    // the dark canvas background drawn by the resize step.
     const scale = Math.min(
       target.width / source.width,
       target.height / source.height,
@@ -54,6 +56,8 @@ export function computeCropOrFitPlan(
   }
 
   if (cropMode === "fill") {
+    // Fill maps the entire source into the target rectangle, even if that means
+    // stretching. It is deliberately distinct from center crop.
     return {
       source: { x: 0, y: 0, width: source.width, height: source.height },
       destination: { x: 0, y: 0, width: target.width, height: target.height },
@@ -62,6 +66,7 @@ export function computeCropOrFitPlan(
   }
 
   if (sourceRatio > targetRatio) {
+    // Source is wider than the target, so trim equal width from both sides.
     const width = source.height * targetRatio;
 
     return {
@@ -78,6 +83,7 @@ export function computeCropOrFitPlan(
 
   const height = source.width / targetRatio;
 
+  // Source is taller than the target, so trim equal height from top and bottom.
   return {
     source: {
       x: 0,

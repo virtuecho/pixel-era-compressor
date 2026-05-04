@@ -1,6 +1,8 @@
 import { createRasterCanvas, getRasterContext } from "../pipeline/resize";
 import type { ImageFrame } from "../pipeline/image-frame";
 
+// Encoder boundary for the final processed frame. Metadata/EXIF are not copied
+// here; the browser canvas encoder receives only RGBA pixels and JPEG quality.
 export type JpegExportOptions = {
   readonly quality: number;
 };
@@ -29,6 +31,8 @@ export async function exportFrameAsJpeg(
 
   const canvas = createRasterCanvas(frame.width, frame.height);
   const context = getRasterContext(canvas);
+  // Rehydrate the pipeline's explicit RGBA buffer into ImageData so Canvas can
+  // perform the JPEG encoding step.
   const imageData = new ImageData(
     new Uint8ClampedArray(frame.data),
     frame.width,

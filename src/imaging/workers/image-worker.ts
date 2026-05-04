@@ -6,6 +6,8 @@ import type {
   ImageWorkerResponse,
 } from "./worker-protocol";
 
+// The worker owns expensive decode/process/encode work so the React thread can
+// keep handling drag/drop, previews, and controls.
 globalThis.addEventListener(
   "message",
   (event: MessageEvent<ImageWorkerRequest>) => {
@@ -26,6 +28,8 @@ async function handleRequest(request: ImageWorkerRequest): Promise<void> {
   }
 
   try {
+    // Processing returns an RGBA frame plus pipeline metadata; JPEG export is
+    // kept separate so encoder choices can evolve without changing pixel steps.
     const processed = await processImage(
       request.input,
       preset,
@@ -34,6 +38,7 @@ async function handleRequest(request: ImageWorkerRequest): Promise<void> {
     const blob = await exportFrameAsJpeg(processed.frame, {
       quality: processed.jpegQuality,
     });
+    // This metadata is for the app UI only. It is not written into JPEG EXIF.
     const metadata = {
       presetId: processed.presetId,
       width: processed.width,

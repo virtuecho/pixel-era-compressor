@@ -52,6 +52,8 @@ export async function processImage(
   const image = await decodeImageBlob(input);
 
   try {
+    // Presets store their historical native size in landscape orientation. Swap
+    // dimensions for portrait inputs so a portrait source stays portrait.
     const outputSize = resolveOrientedOutputSize(
       { width: image.width, height: image.height },
       { width: preset.nativeWidth, height: preset.nativeHeight },
@@ -74,6 +76,8 @@ export function processPreparedFrame(
   options: ProcessImageOptions,
 ): ProcessedImage {
   const scale = intensityScale[options.intensity];
+  // The order follows the product spec: first optical limits, then sensor
+  // behavior, then tone/color response, then the in-camera ISP signature.
   const softened = applyOpticalSoftness(frame, {
     blurPx: preset.optical.blurPx,
     edgeSoftness: preset.optical.edgeSoftness,

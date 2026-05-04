@@ -1,6 +1,8 @@
 import type { CameraPreset } from "./preset-types";
 import { webPresets } from "./web-presets";
 
+// Device presets are ordered roughly by category and era in data, then sorted
+// again in the picker. The numeric profiles feed the pipeline directly.
 const devicePresets = [
   {
     id: "nokia-7650",
@@ -537,14 +539,20 @@ export const cameraPresets = [
 
 export type CameraPresetId = (typeof cameraPresets)[number]["id"];
 
+// Lookup by stable preset ID. UI and worker code both use IDs rather than array
+// positions so sorting cannot change behavior.
 export function findCameraPreset(id: string): CameraPreset | undefined {
   return cameraPresets.find((preset) => preset.id === id);
 }
 
+// The product's first-run default is an early iPhone look, with a safe fallback
+// for tests or future preset edits.
 export function getDefaultCameraPreset(): CameraPreset {
   return findCameraPreset("iphone-3gs") ?? cameraPresets[0];
 }
 
+// Era sorting keeps devices from being ordered alphabetically inside categories;
+// model labels are only tie-breakers within the same year.
 export function compareCameraPresetsByEra(
   left: CameraPreset,
   right: CameraPreset,

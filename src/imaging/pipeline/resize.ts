@@ -7,6 +7,8 @@ type RasterContext =
   | CanvasRenderingContext2D
   | OffscreenCanvasRenderingContext2D;
 
+// Use OffscreenCanvas in workers when available, with a DOM canvas fallback for
+// browser contexts and tests that run outside the worker.
 export function createRasterCanvas(
   width: number,
   height: number,
@@ -25,6 +27,8 @@ export function createRasterCanvas(
   throw new Error("Canvas is not available in this environment.");
 }
 
+// All pipeline canvas reads request willReadFrequently because resize converts
+// the rendered canvas back into ImageData immediately.
 export function getRasterContext(canvas: RasterCanvas): RasterContext {
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -58,6 +62,8 @@ export function renderImageBitmapToFrame(
 ): ImageFrame {
   const canvas = createRasterCanvas(targetWidth, targetHeight);
   const context = getRasterContext(canvas);
+  // Crop/fit is computed before drawing so the browser's high-quality sampler
+  // performs the actual resampling into the low-pixel target.
   const plan = computeCropOrFitPlan(
     { width: image.width, height: image.height },
     { width: targetWidth, height: targetHeight },
@@ -66,6 +72,8 @@ export function renderImageBitmapToFrame(
 
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
+  // Fit-inside mode leaves unused area visible; the dark fill approximates the
+  // matte/padding common in early web image workflows.
   context.fillStyle = "rgb(8 8 8)";
   context.fillRect(0, 0, targetWidth, targetHeight);
   context.drawImage(

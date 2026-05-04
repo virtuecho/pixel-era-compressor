@@ -1,5 +1,7 @@
 import type { CameraPreset } from "./preset-types";
 
+// Web presets model the resize-and-share targets that existed alongside camera
+// devices: old display sizes, blog uploads, and early mobile upload ceilings.
 export const webPresets = [
   {
     id: "old-web-640",

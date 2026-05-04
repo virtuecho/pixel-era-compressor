@@ -3,6 +3,8 @@ import type {
   ProcessedImage,
 } from "../pipeline/image-pipeline";
 
+// Messages sent from App to the image worker. The Blob stays original so codec
+// detection and HEIC fallback behavior happen at the worker boundary.
 export type ImageWorkerRequest = {
   readonly id: string;
   readonly input: Blob;
@@ -10,6 +12,8 @@ export type ImageWorkerRequest = {
   readonly options: ProcessImageOptions;
 };
 
+// Worker success returns both the encoded JPEG Blob and UI-facing metadata about
+// the processing run. The metadata is not embedded into the Blob.
 export type ImageWorkerSuccess = {
   readonly id: string;
   readonly ok: true;

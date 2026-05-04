@@ -5,6 +5,8 @@ import {
 } from "../imaging/presets/camera-presets";
 import { aspectRatioValue } from "../imaging/presets/preset-types";
 
+// A small required set keeps the MVP product surface from accidentally dropping
+// important web, phone, compact-camera, or DSLR presets.
 const requiredPresetIds = [
   "old-web-640",
   "old-blog-800",
@@ -18,6 +20,8 @@ const requiredPresetIds = [
   "canon-eos-300d",
 ] as const;
 
+// Preset tests validate structural integrity, not exact visual taste. Individual
+// values can evolve as long as IDs, dimensions, and ordering stay sane.
 describe("camera presets", () => {
   it("contains the MVP preset set", () => {
     const ids = new Set(cameraPresets.map((preset) => preset.id));

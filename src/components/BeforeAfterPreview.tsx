@@ -3,6 +3,8 @@ import { useId, useState } from "react";
 import type { ChangeEvent, DragEvent, ReactElement } from "react";
 import { supportedInputImageAccept } from "../imaging/codecs/input-image";
 
+// Renders the side-by-side working surface: input preview on the left and the
+// current preset output on the right.
 export type BeforeAfterPreviewProps = {
   readonly sourceUrl: string | null;
   readonly sourcePreviewNotice: string | null;
@@ -27,6 +29,8 @@ export function BeforeAfterPreview({
   const sourceInputId = useId();
   const [isSourceDragging, setIsSourceDragging] = useState(false);
 
+  // The empty original pane behaves like the main uploader so first-time mobile
+  // and desktop users can start from the preview area itself.
   function chooseSourceImages(event: ChangeEvent<HTMLInputElement>): void {
     chooseSourceFileList(event.currentTarget.files);
     event.currentTarget.value = "";
@@ -40,6 +44,8 @@ export function BeforeAfterPreview({
     }
   }
 
+  // Drag/drop is ignored while a HEIC fallback preview is being prepared; the
+  // processing indicator should not double as a second upload target.
   function handleSourceDrop(event: DragEvent<HTMLDivElement>): void {
     event.preventDefault();
     setIsSourceDragging(false);

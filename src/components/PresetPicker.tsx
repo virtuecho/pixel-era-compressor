@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import { sortCameraPresetsByEra } from "../imaging/presets/camera-presets";
 import type { CameraPreset } from "../imaging/presets/preset-types";
 
+// Presets are grouped by output context but sorted by year inside each group so
+// the menu reads like a small timeline rather than an alphabetical list.
 export type PresetPickerProps = {
   readonly presets: readonly CameraPreset[];
   readonly selectedPresetId: string;
@@ -18,6 +20,8 @@ const categories = [
   readonly label: string;
 }[];
 
+// The select stays intentionally native for mobile ergonomics and keyboard
+// accessibility; the richer preset meaning lives in the data model.
 export function PresetPicker({
   presets,
   selectedPresetId,

@@ -6,6 +6,8 @@ import {
   supportedInputImageAccept,
 } from "../imaging/codecs/input-image";
 
+// Build a tiny ISO BMFF `ftyp` blob so HEIC/AVIF brand detection can be tested
+// without storing binary fixture images in the repository.
 function createFtypBlob(
   primaryBrand: string,
   compatibleBrands: readonly string[] = [],
@@ -28,12 +30,15 @@ function createFtypBlob(
   return new Blob([bytes], { type });
 }
 
+// Writes four-character brands into the synthetic container header.
 function writeAscii(bytes: Uint8Array, offset: number, value: string): void {
   for (let index = 0; index < value.length; index += 1) {
     bytes[offset + index] = value.charCodeAt(index);
   }
 }
 
+// Codec tests focus on routing decisions: browser-native blobs should stay on
+// the normal path, while HEIC-like containers should use the compatibility path.
 describe("input image decoding", () => {
   it("exposes common image formats plus HEIC and HEIF to the file picker", () => {
     expect(supportedInputImageAccept).toContain("image/jpeg");

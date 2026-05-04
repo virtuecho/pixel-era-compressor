@@ -3,6 +3,8 @@ import { useId, useState } from "react";
 import type { ReactElement } from "react";
 import { supportedInputImageAccept } from "../imaging/codecs/input-image";
 
+// Top-level batch uploader. It accepts the same formats as the codec boundary
+// and replaces the current queue with the selected files.
 export type ImageUploaderProps = {
   readonly files: readonly File[];
   readonly onFilesSelected: (files: readonly File[]) => void;
@@ -15,6 +17,8 @@ export function ImageUploader({
   const inputId = useId();
   const [isDragging, setIsDragging] = useState(false);
 
+  // File inputs and drag events both provide FileList, so normalize once before
+  // handing the batch to App.
   function chooseImages(fileList: FileList | null): void {
     const selectedFiles = fileList === null ? [] : Array.from(fileList);
 
@@ -71,6 +75,7 @@ export function ImageUploader({
   );
 }
 
+// Keep the uploader label compact while still reflecting the current queue.
 function formatUploadLabel(files: readonly File[]): string {
   if (files.length === 0) {
     return "Drop images here or choose files";

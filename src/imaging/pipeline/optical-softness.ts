@@ -42,6 +42,8 @@ export function applyOpticalSoftness(
 
   for (let y = 0; y < frame.height; y += 1) {
     for (let x = 0; x < frame.width; x += 1) {
+      // A four-neighbor cross blur is intentionally restrained: it softens edges
+      // without turning small images into a smeared modern blur filter.
       const center = pixelOffset(frame.width, x, y);
       const left = pixelOffset(frame.width, Math.max(0, x - 1), y);
       const right = pixelOffset(

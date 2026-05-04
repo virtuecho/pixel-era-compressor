@@ -49,6 +49,8 @@ export function applyDeviceIspSignature(
     for (let x = 0; x < frame.width; x += 1) {
       const offset = pixelOffset(frame.width, x, y);
       const average = localAverage(frame, x, y);
+      // Vignette is computed from normalized radius so presets scale across
+      // VGA phone frames and larger compact-camera outputs.
       const vignetteDistance = Math.hypot(x - centerX, y - centerY) / maxRadius;
       const vignette =
         1 - vignetteStrength * vignetteDistance * vignetteDistance;
@@ -69,6 +71,8 @@ export function applyDeviceIspSignature(
       ] as const;
 
       for (let channel = 0; channel < 3; channel += 1) {
+        // Denoise pulls toward the local average; sharpening then pushes away
+        // from that same average, producing old ISP smear plus edge halos.
         const denoised =
           shifted[channel] * (1 - denoiseStrength) +
           average[channel] * denoiseStrength;

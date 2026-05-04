@@ -25,6 +25,8 @@ function crushShadow(
     return value;
   }
 
+  // Darker values are compressed more than pixels near the threshold, which
+  // mimics shadow separation disappearing without making all shadows identical.
   const normalized = value / Math.max(1, threshold);
   return value * (1 - strength * (1 - normalized));
 }
@@ -91,6 +93,8 @@ export function applyToneCurve(
       );
       const luma = red * 0.299 + green * 0.587 + blue * 0.114;
 
+      // Apply saturation around luma after dynamic-range compression so color
+      // drift feels like camera processing rather than a decorative overlay.
       output.data[offset] = clampChannel(
         luma + (red - luma) * saturation + warmth - greenMagenta * 0.5,
       );
@@ -115,6 +119,8 @@ function transformChannel(
   contrast: number,
   dynamicRangeScale: number,
 ): number {
+  // Channel order matters: clip highlights, crush shadows, adjust contrast, and
+  // finally compress overall range around mid-gray.
   const clipped = Math.min(highlightCeiling, value);
   const crushed = crushShadow(clipped, shadowThreshold, shadowStrength);
   const contrasted = (crushed - 128) * contrast + 128;

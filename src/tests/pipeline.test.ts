@@ -14,6 +14,8 @@ import { applyOpticalSoftness } from "../imaging/pipeline/optical-softness";
 import { applySensorNoise } from "../imaging/pipeline/sensor-noise";
 import { applyToneCurve } from "../imaging/pipeline/tone-curve";
 
+// Tiny deterministic frame used to test pixel transformations without relying
+// on browser decoders, fixture files, or canvas rendering.
 function sampleFrame(): ImageFrame {
   return createImageFrame(
     3,
@@ -26,6 +28,8 @@ function sampleFrame(): ImageFrame {
   );
 }
 
+// Most pipeline tests care that math stays in valid RGBA byte space. Exact
+// image aesthetics are preset-tuning concerns rather than unit-test fixtures.
 function expectValidChannels(frame: ImageFrame): void {
   expect(frame.data).toHaveLength(frame.width * frame.height * 4);
 
@@ -35,6 +39,8 @@ function expectValidChannels(frame: ImageFrame): void {
   }
 }
 
+// Pipeline tests cover each public step and the composed metadata contract used
+// by the worker.
 describe("pipeline steps", () => {
   it("keeps optical softness output within valid channel bounds", () => {
     const output = applyOpticalSoftness(sampleFrame(), {

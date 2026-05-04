@@ -1,6 +1,8 @@
 /* global caches, location, self */
 
 const CACHE_NAME = "pixel-era-compressor-v1";
+// Cache the shell and install icons so the PWA can launch even when the network
+// is unavailable after a first successful visit.
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -13,6 +15,8 @@ const CORE_ASSETS = [
   "/favicon/site.webmanifest",
 ];
 
+// Pre-cache the core shell during install. Vite-built hashed assets are cached
+// lazily by the fetch handler below.
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -21,6 +25,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
+// Remove older named caches when the service worker version changes.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -33,6 +38,8 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Network-first for same-origin GET requests: users get fresh builds when
+// online, with cached pages/assets as the offline fallback.
 self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
@@ -45,6 +52,8 @@ self.addEventListener("fetch", (event) => {
       .then((response) => {
         const responseForCache = response.clone();
 
+        // Cache successful network responses opportunistically for future
+        // offline launches. The response is cloned because streams are one-use.
         caches.open(CACHE_NAME).then((cache) => {
           return cache.put(event.request, responseForCache);
         });

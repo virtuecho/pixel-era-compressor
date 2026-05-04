@@ -5,6 +5,8 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+// ESLint is part of the architecture contract: TypeScript app code is checked
+// with type-aware strict rules, while small config scripts keep Node globals.
 export default defineConfig(
   {
     ignores: ["dist", "node_modules", "coverage"],
@@ -32,6 +34,8 @@ export default defineConfig(
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
+      // The repo has both browser code and Node scripts, so globals include both
+      // while TypeScript projectService supplies type-aware linting.
       globals: {
         ...globals.browser,
         ...globals.node,
@@ -46,6 +50,8 @@ export default defineConfig(
       "react-refresh": reactRefresh,
     },
     rules: {
+      // React hooks and Fast Refresh rules catch the UI-specific mistakes that
+      // TypeScript alone cannot see.
       ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/no-magic-numbers": "off",

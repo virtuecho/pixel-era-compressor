@@ -19,6 +19,9 @@ import type {
   ImageWorkerSuccess,
 } from "../imaging/workers/worker-protocol";
 
+// The UI treats each uploaded file as a job whose output depends on the current
+// preset, intensity, and crop mode. Changing settings makes old results stale
+// without discarding the user's selected files.
 type ImageJobStatus = "queued" | "processing" | "ready" | "error";
 
 type ImageJob = {
@@ -68,6 +71,8 @@ const intensities = [
 const appIntro =
   "Pixel Era Compressor is a 2000-2013 digital photo compression simulator for early web images, camera phones, compact digital cameras, and pre-computational iPhone-era photography.";
 
+// App owns the browser-facing workflow: upload files, preview the active input,
+// schedule worker jobs, and expose batch/export controls.
 export function App(): ReactElement {
   const workerRef = useRef<Worker | null>(null);
   const requestCounter = useRef(0);
@@ -118,6 +123,8 @@ export function App(): ReactElement {
     [imageJobs, processingConfigKey],
   );
 
+  // Refs mirror state that worker callbacks and async preview fallbacks need to
+  // read without closing over an old render.
   useEffect(() => {
     processingConfigKeyRef.current = processingConfigKey;
   }, [processingConfigKey]);
@@ -130,6 +137,8 @@ export function App(): ReactElement {
     activeFileRef.current = activeFile;
   }, [activeFile]);
 
+  // The image worker stays alive for the page lifetime so batch processing does
+  // not repeatedly pay worker startup costs.
   useEffect(() => {
     const worker = new Worker(
       new URL("../imaging/workers/image-worker.ts", import.meta.url),
@@ -158,6 +167,9 @@ export function App(): ReactElement {
     };
   }, []);
 
+  // Start with the original file URL for the left preview. Browsers that can
+  // display HEIC natively can use it directly; other browsers trigger the image
+  // error handler below and receive a lightweight JPEG preview fallback.
   useEffect(() => {
     if (activeFile === null) {
       setActiveSourceUrl(null);
@@ -199,6 +211,8 @@ export function App(): ReactElement {
     setActiveSourcePreviewNotice(null);
     setIsActiveSourceProcessing(true);
 
+    // Only one fallback preview is generated for the active file. If the user
+    // switches files before decoding finishes, the stale result is ignored.
     void createDisplayableInputPreviewBlob(file)
       .then((previewBlob) => {
         if (activeFileRef.current !== file) {
@@ -226,6 +240,8 @@ export function App(): ReactElement {
       });
   }, []);
 
+  // If a selected job disappears after a new upload batch, keep the UI pointed
+  // at the first available job instead of leaving the preview orphaned.
   useEffect(() => {
     if (
       imageJobs.length === 0 ||
@@ -254,6 +270,8 @@ export function App(): ReactElement {
       return;
     }
 
+    // Process one job at a time. This keeps memory predictable on phones where
+    // multiple large canvases or HEIC decoders can quickly exhaust resources.
     const nextJob = imageJobs.find((job) => {
       return job.configKey !== processingConfigKey || job.status === "queued";
     });
@@ -315,6 +333,8 @@ export function App(): ReactElement {
     processingConfigKey,
   ]);
 
+  // Uploading a new batch replaces the prior queue and revokes all old object
+  // URLs, because those blobs no longer belong to visible UI.
   function handleFilesSelected(files: readonly File[]): void {
     const nextJobs = files.map((file) => {
       const id = `image-${Date.now().toString(36)}-${requestCounter.current.toString(36)}`;
@@ -346,6 +366,8 @@ export function App(): ReactElement {
       return;
     }
 
+    // Worker responses can arrive after the user changed settings. The config
+    // key check above prevents stale output from replacing the current result.
     if (currentJob.outputUrl !== null) {
       URL.revokeObjectURL(currentJob.outputUrl);
     }
@@ -388,6 +410,8 @@ export function App(): ReactElement {
     });
   }
 
+  // Batch export intentionally keeps the simple browser download path. Each
+  // ready job has its own object URL and generated filename.
   function exportReadyJobs(): void {
     const readyJobs = imageJobs.filter((job) => {
       return (
@@ -656,6 +680,7 @@ export function App(): ReactElement {
   );
 }
 
+// Create a fresh queue item with no cached output for the active settings yet.
 function createImageJob(id: string, file: File): ImageJob {
   return {
     id,
@@ -669,6 +694,8 @@ function createImageJob(id: string, file: File): ImageJob {
   };
 }
 
+// The active job is user-selected when possible, otherwise the first queued job
+// keeps the preview from going blank after uploads.
 function findActiveJob(
   jobs: readonly ImageJob[],
   activeJobId: string | null,
@@ -685,6 +712,8 @@ function findActiveJob(
   return jobs.length > 0 ? jobs[0] : null;
 }
 
+// Worker request IDs carry both job identity and the processing config. That
+// makes it cheap to reject stale responses after settings change.
 function createWorkerRequestId(
   jobId: string,
   configKey: string,
@@ -706,6 +735,8 @@ function parseWorkerRequestId(id: string): ParsedWorkerRequestId | null {
   };
 }
 
+// A job whose config key differs from the current controls is queued again even
+// if it was previously ready under another preset.
 function getCurrentJobStatus(
   job: ImageJob,
   processingConfigKey: string,
@@ -717,6 +748,7 @@ function getCurrentJobStatus(
   return job.status;
 }
 
+// Aggregate queue status for the file info panel and batch export controls.
 function getBatchStats(
   jobs: readonly ImageJob[],
   processingConfigKey: string,
@@ -750,6 +782,8 @@ function getBatchStats(
   );
 }
 
+// Object URLs pin Blob memory until revoked, so every queue replacement and
+// component teardown must release them explicitly.
 function revokeJobOutputUrls(jobs: readonly ImageJob[]): void {
   for (const job of jobs) {
     if (job.outputUrl !== null) {
@@ -758,11 +792,15 @@ function revokeJobOutputUrls(jobs: readonly ImageJob[]): void {
   }
 }
 
+// Preserve the input filename stem while making the chosen preset visible in
+// the exported JPEG name.
 function formatExportFilename(file: File | null, presetId: string): string {
   const stem = file?.name.replace(/\.[^.]+$/, "") ?? "pixel-era";
   return `${stem}-${presetId}.jpg`;
 }
 
+// The remaining format helpers keep display strings out of JSX so the layout
+// code stays focused on structure.
 function formatInputSummary(stats: BatchStats): string {
   if (stats.totalCount === 0) {
     return "No file";

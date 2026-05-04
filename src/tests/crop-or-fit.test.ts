@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { computeCropOrFitPlan } from "../imaging/pipeline/crop-or-fit";
 
+// These tests lock down geometry contracts before pixels are rendered. They
+// verify source and destination rectangles rather than canvas output.
 describe("computeCropOrFitPlan", () => {
   it("center crops wide input to the requested aspect ratio", () => {
     const plan = computeCropOrFitPlan(
