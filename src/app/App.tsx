@@ -64,6 +64,9 @@ const intensities = [
   readonly label: string;
 }[];
 
+const appIntro =
+  "Pixel Era Compressor is a 2000-2013 digital photo compression simulator for early web images, camera phones, compact digital cameras, and pre-computational iPhone-era photography.";
+
 export function App(): ReactElement {
   const workerRef = useRef<Worker | null>(null);
   const requestCounter = useRef(0);
@@ -73,6 +76,7 @@ export function App(): ReactElement {
   const [imageJobs, setImageJobs] = useState<readonly ImageJob[]>([]);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeSourceUrl, setActiveSourceUrl] = useState<string | null>(null);
+  const [isAboutVisible, setIsAboutVisible] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState(
     getDefaultCameraPreset().id,
   );
@@ -345,13 +349,16 @@ export function App(): ReactElement {
         <header className="top-bar">
           <h1>Pixel Era Compressor</h1>
           <nav className="top-nav" aria-label="Project links">
-            <a
-              href="https://github.com/virtuecho/pixel-era-compressor#pixel-era-compressor"
-              rel="noreferrer"
-              target="_blank"
+            <button
+              type="button"
+              aria-expanded={isAboutVisible}
+              aria-controls="about-panel"
+              onClick={() => {
+                setIsAboutVisible((currentValue) => !currentValue);
+              }}
             >
               About
-            </a>
+            </button>
             <a
               href="https://github.com/virtuecho/pixel-era-compressor"
               rel="noreferrer"
@@ -361,6 +368,19 @@ export function App(): ReactElement {
             </a>
           </nav>
         </header>
+
+        {isAboutVisible ? (
+          <section id="about-panel" className="about-panel">
+            <img
+              src="/favicon/android-chrome-192x192.png"
+              width="56"
+              height="56"
+              alt=""
+              aria-hidden="true"
+            />
+            <p>{appIntro}</p>
+          </section>
+        ) : null}
 
         <div className="upload-strip">
           <ImageUploader

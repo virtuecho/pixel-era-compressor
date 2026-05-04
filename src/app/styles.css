@@ -75,12 +75,25 @@ a.primary-button,
   white-space: nowrap;
 }
 
-.top-nav a {
+.top-nav a,
+.top-nav button {
+  border: 0;
   color: var(--ink);
+  background: transparent;
   font-size: 0.84rem;
   font-weight: 800;
   text-decoration: none;
   text-transform: uppercase;
+}
+
+.top-nav button {
+  min-height: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.top-nav button[aria-expanded="true"] {
+  color: var(--accent-strong);
 }
 
 h1 {
@@ -88,6 +101,31 @@ h1 {
   font-size: 1.1rem;
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+.about-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #f2f5f2;
+}
+
+.about-panel img {
+  display: block;
+  inline-size: 56px;
+  block-size: 56px;
+}
+
+.about-panel p {
+  margin: 0;
+  max-width: 78ch;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 750;
+  line-height: 1.45;
 }
 
 .upload-strip {
@@ -555,6 +593,10 @@ select {
 
   .top-nav {
     justify-content: space-between;
+  }
+
+  .about-panel {
+    grid-template-columns: 1fr;
   }
 
   .upload-panel {
