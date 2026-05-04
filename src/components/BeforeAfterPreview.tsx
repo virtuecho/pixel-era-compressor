@@ -15,7 +15,7 @@ export function BeforeAfterPreview({
   isProcessing,
 }: BeforeAfterPreviewProps): ReactElement {
   return (
-    <div className="comparison-grid">
+    <section className="comparison-grid" aria-label="Before and after preview">
       <figure className="preview-frame">
         <figcaption>Original</figcaption>
         {sourceUrl === null ? (
@@ -38,6 +38,6 @@ export function BeforeAfterPreview({
           <img src={outputUrl} alt={`${presetLabel} output`} />
         )}
       </figure>
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,5 @@
 import { ImagePlus, Upload } from "lucide-react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { ReactElement } from "react";
 import { supportedInputImageAccept } from "../imaging/codecs/input-image";
 
@@ -13,19 +13,42 @@ export function ImageUploader({
   onFileSelected,
 }: ImageUploaderProps): ReactElement {
   const inputId = useId();
+  const [isDragging, setIsDragging] = useState(false);
+
+  function chooseFirstImage(files: FileList | null): void {
+    onFileSelected(files?.[0] ?? null);
+  }
 
   return (
-    <section className="upload-panel">
+    <section
+      className="upload-panel"
+      data-dragging={isDragging}
+      onDragEnter={(event) => {
+        event.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+      }}
+      onDragLeave={() => {
+        setIsDragging(false);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setIsDragging(false);
+        chooseFirstImage(event.dataTransfer.files);
+      }}
+    >
       <label className="upload-target" htmlFor={inputId}>
         <ImagePlus size={22} aria-hidden="true" />
-        <span>{file?.name ?? "Choose image"}</span>
+        <span>{file?.name ?? "Drop image here or choose file"}</span>
       </label>
       <input
         id={inputId}
         type="file"
         accept={supportedInputImageAccept}
         onChange={(event) => {
-          onFileSelected(event.currentTarget.files?.[0] ?? null);
+          chooseFirstImage(event.currentTarget.files);
         }}
       />
       <button
