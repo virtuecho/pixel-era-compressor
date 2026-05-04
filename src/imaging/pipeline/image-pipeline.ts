@@ -52,10 +52,14 @@ export async function processImage(
   const image = await decodeImageBlob(input);
 
   try {
+    const outputSize = resolveOrientedOutputSize(
+      { width: image.width, height: image.height },
+      { width: preset.nativeWidth, height: preset.nativeHeight },
+    );
     const resized = renderImageBitmapToFrame(
       image,
-      preset.nativeWidth,
-      preset.nativeHeight,
+      outputSize.width,
+      outputSize.height,
       options.cropMode,
     );
     return processPreparedFrame(resized, preset, options);
@@ -102,9 +106,26 @@ export function processPreparedFrame(
   return {
     frame: ispFrame,
     presetId: preset.id,
-    width: preset.nativeWidth,
-    height: preset.nativeHeight,
+    width: ispFrame.width,
+    height: ispFrame.height,
     jpegQuality: preset.isp.jpegQuality,
     steps: pipelineSteps,
+  };
+}
+
+export function resolveOrientedOutputSize(
+  source: { readonly width: number; readonly height: number },
+  presetSize: { readonly width: number; readonly height: number },
+): { readonly width: number; readonly height: number } {
+  const sourceIsPortrait = source.height > source.width;
+  const presetIsPortrait = presetSize.height > presetSize.width;
+
+  if (sourceIsPortrait === presetIsPortrait) {
+    return presetSize;
+  }
+
+  return {
+    width: presetSize.height,
+    height: presetSize.width,
   };
 }

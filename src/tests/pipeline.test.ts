@@ -6,7 +6,10 @@ import {
   createImageFrame,
   type ImageFrame,
 } from "../imaging/pipeline/image-frame";
-import { processPreparedFrame } from "../imaging/pipeline/image-pipeline";
+import {
+  processPreparedFrame,
+  resolveOrientedOutputSize,
+} from "../imaging/pipeline/image-pipeline";
 import { applyOpticalSoftness } from "../imaging/pipeline/optical-softness";
 import { applySensorNoise } from "../imaging/pipeline/sensor-noise";
 import { applyToneCurve } from "../imaging/pipeline/tone-curve";
@@ -116,6 +119,25 @@ describe("pipeline steps", () => {
       "jpeg-export",
     ]);
     expectValidChannels(processed.frame);
+  });
+
+  it("matches preset dimensions to the decoded image orientation", () => {
+    const landscapePresetSize = { width: 4, height: 3 } as const;
+    const portraitOutput = resolveOrientedOutputSize(
+      { width: 3, height: 4 },
+      landscapePresetSize,
+    );
+    const landscapeOutput = resolveOrientedOutputSize(
+      { width: 4, height: 3 },
+      landscapePresetSize,
+    );
+
+    expect(portraitOutput.height).toBeGreaterThan(portraitOutput.width);
+    expect(landscapeOutput.width).toBeGreaterThan(landscapeOutput.height);
+    expect([portraitOutput.width, portraitOutput.height].sort()).toEqual(
+      [landscapePresetSize.width, landscapePresetSize.height].sort(),
+    );
+    expect(landscapeOutput).toEqual(landscapePresetSize);
   });
 
   it("exports a JPEG blob", async () => {
