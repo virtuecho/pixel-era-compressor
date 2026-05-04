@@ -83,8 +83,10 @@ The tool must make photos look as if they were captured or uploaded during the 2
 5. Export JPEG by default.
 6. Process one or more uploaded images with the same selected preset and export
    each result.
-7. Run locally in the browser whenever possible.
-8. Provide enough engineering structure for agents to continue development safely.
+7. Provide an installable browser app shell when the browser supports PWA
+   installation.
+8. Run locally in the browser whenever possible.
+9. Provide enough engineering structure for agents to continue development safely.
 
 ---
 

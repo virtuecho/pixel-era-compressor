@@ -44,6 +44,15 @@ pnpm check
 
 Agents must not push. Human maintainers push manually.
 
+## Install as an app
+
+Pixel Era Compressor ships as an installable Progressive Web App. In supported
+desktop and mobile browsers, use the browser's install, add-to-home-screen, or
+share-menu install action after opening the production site.
+
+The installed app still runs the same local browser pipeline: batch uploads,
+HEIC/HEIF decoding, previews, and JPEG exports happen on-device.
+
 ## Browser support
 
 Pixel Era Compressor targets modern browsers that support Vite 7 production
