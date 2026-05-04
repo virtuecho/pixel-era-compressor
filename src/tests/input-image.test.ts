@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createDisplayableInputPreviewBlob,
   isHeicContainerBlob,
   readIsoBmffBrands,
   supportedInputImageAccept,
@@ -73,5 +74,13 @@ describe("input image decoding", () => {
     await expect(
       isHeicContainerBlob(new Blob([], { type: "image/heif" })),
     ).resolves.toBe(true);
+  });
+
+  it("uses browser-native image blobs directly for previews", async () => {
+    const pngBlob = new Blob(["preview"], { type: "image/png" });
+
+    await expect(createDisplayableInputPreviewBlob(pngBlob)).resolves.toBe(
+      pngBlob,
+    );
   });
 });

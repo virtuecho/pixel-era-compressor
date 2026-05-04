@@ -302,6 +302,9 @@ select {
 }
 
 .preview-frame figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   min-height: 42px;
   margin: 0;
   padding: 12px 14px;
@@ -310,6 +313,14 @@ select {
   font-size: 0.84rem;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.preview-frame figcaption.is-notice {
+  color: var(--accent-strong);
+}
+
+.preview-frame figcaption span {
+  color: var(--accent);
 }
 
 .preview-frame img,

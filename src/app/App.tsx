@@ -1,10 +1,11 @@
 import { Download, Loader2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { BeforeAfterPreview } from "../components/BeforeAfterPreview";
 import { ExportPanel } from "../components/ExportPanel";
 import { ImageUploader } from "../components/ImageUploader";
 import { PresetPicker } from "../components/PresetPicker";
+import { createDisplayableInputPreviewBlob } from "../imaging/codecs/input-image";
 import {
   cameraPresets,
   findCameraPreset,
@@ -72,10 +73,18 @@ export function App(): ReactElement {
   const requestCounter = useRef(0);
   const imageJobsRef = useRef<readonly ImageJob[]>([]);
   const processingConfigKeyRef = useRef("");
+  const activeFileRef = useRef<File | null>(null);
+  const sourceFallbackUrlRef = useRef<string | null>(null);
+  const sourceFallbackRequestRef = useRef<File | null>(null);
   const [isWorkerReady, setIsWorkerReady] = useState(false);
   const [imageJobs, setImageJobs] = useState<readonly ImageJob[]>([]);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeSourceUrl, setActiveSourceUrl] = useState<string | null>(null);
+  const [activeSourcePreviewNotice, setActiveSourcePreviewNotice] = useState<
+    string | null
+  >(null);
+  const [isActiveSourceProcessing, setIsActiveSourceProcessing] =
+    useState(false);
   const [isAboutVisible, setIsAboutVisible] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState(
     getDefaultCameraPreset().id,
@@ -118,6 +127,10 @@ export function App(): ReactElement {
   }, [imageJobs]);
 
   useEffect(() => {
+    activeFileRef.current = activeFile;
+  }, [activeFile]);
+
+  useEffect(() => {
     const worker = new Worker(
       new URL("../imaging/workers/image-worker.ts", import.meta.url),
       { type: "module" },
@@ -148,16 +161,70 @@ export function App(): ReactElement {
   useEffect(() => {
     if (activeFile === null) {
       setActiveSourceUrl(null);
+      setActiveSourcePreviewNotice(null);
+      setIsActiveSourceProcessing(false);
       return undefined;
     }
 
-    const nextSourceUrl = URL.createObjectURL(activeFile);
-    setActiveSourceUrl(nextSourceUrl);
+    const directSourceUrl = URL.createObjectURL(activeFile);
+    setActiveSourceUrl(directSourceUrl);
+    setActiveSourcePreviewNotice(null);
+    setIsActiveSourceProcessing(false);
 
     return () => {
-      URL.revokeObjectURL(nextSourceUrl);
+      URL.revokeObjectURL(directSourceUrl);
+
+      if (sourceFallbackUrlRef.current !== null) {
+        URL.revokeObjectURL(sourceFallbackUrlRef.current);
+        sourceFallbackUrlRef.current = null;
+      }
+
+      sourceFallbackRequestRef.current = null;
     };
   }, [activeFile]);
+
+  const handleSourcePreviewError = useCallback(() => {
+    const file = activeFileRef.current;
+
+    if (
+      file === null ||
+      sourceFallbackRequestRef.current === file ||
+      sourceFallbackUrlRef.current !== null
+    ) {
+      return;
+    }
+
+    sourceFallbackRequestRef.current = file;
+    setActiveSourceUrl(null);
+    setActiveSourcePreviewNotice(null);
+    setIsActiveSourceProcessing(true);
+
+    void createDisplayableInputPreviewBlob(file)
+      .then((previewBlob) => {
+        if (activeFileRef.current !== file) {
+          return;
+        }
+
+        if (previewBlob === file) {
+          setIsActiveSourceProcessing(false);
+          return;
+        }
+
+        const nextPreviewUrl = URL.createObjectURL(previewBlob);
+        sourceFallbackUrlRef.current = nextPreviewUrl;
+        setActiveSourceUrl(nextPreviewUrl);
+        setActiveSourcePreviewNotice(
+          "browser compatibility HEIC fallback preview",
+        );
+        setIsActiveSourceProcessing(false);
+      })
+      .catch(() => {
+        if (sourceFallbackRequestRef.current === file) {
+          sourceFallbackRequestRef.current = null;
+          setIsActiveSourceProcessing(false);
+        }
+      });
+  }, []);
 
   useEffect(() => {
     if (
@@ -391,9 +458,12 @@ export function App(): ReactElement {
 
         <BeforeAfterPreview
           sourceUrl={activeSourceUrl}
+          sourcePreviewNotice={activeSourcePreviewNotice}
           outputUrl={activeOutputUrl}
           presetLabel={preset.label}
+          isSourceProcessing={isActiveSourceProcessing}
           isProcessing={activeJobStatus === "processing"}
+          onSourceError={handleSourcePreviewError}
         />
 
         <section className="lower-grid">

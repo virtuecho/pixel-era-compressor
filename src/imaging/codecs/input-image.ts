@@ -18,6 +18,13 @@ const heicBrands = new Set([
 
 const genericHeifPrimaryBrands = new Set(["mif1", "msf1"]);
 const avifBrands = new Set(["avif", "avis"]);
+const previewMaxEdgePx = 1600;
+const previewJpegQuality = 0.82;
+
+type RasterCanvas = HTMLCanvasElement | OffscreenCanvas;
+type RasterContext =
+  | CanvasRenderingContext2D
+  | OffscreenCanvasRenderingContext2D;
 
 export const supportedInputImageAccept = [
   "image/jpeg",
@@ -72,14 +79,7 @@ export async function isHeicContainerBlob(input: Blob): Promise<boolean> {
 
 export async function decodeInputImage(input: Blob): Promise<ImageBitmap> {
   if (await isHeicContainerBlob(input)) {
-    try {
-      const { heicTo } = await import("heic-to/next");
-      return await heicTo({ blob: input, type: "bitmap" });
-    } catch (error) {
-      throw new Error(
-        `Unable to decode HEIC/HEIF image: ${formatErrorMessage(error)}`,
-      );
-    }
+    return decodeHeicInputImage(input);
   }
 
   if (typeof createImageBitmap === "undefined") {
@@ -90,6 +90,27 @@ export async function decodeInputImage(input: Blob): Promise<ImageBitmap> {
     return await createImageBitmap(input);
   } catch (error) {
     throw new Error(`Unable to decode image: ${formatErrorMessage(error)}`);
+  }
+}
+
+export async function createDisplayableInputPreviewBlob(
+  input: Blob,
+): Promise<Blob> {
+  if (!(await isHeicContainerBlob(input))) {
+    return input;
+  }
+
+  let image: ImageBitmap | null = null;
+
+  try {
+    image = await decodeHeicInputImage(input);
+    return await renderImageBitmapToPreviewBlob(image);
+  } catch (error) {
+    throw new Error(
+      `Unable to create HEIC/HEIF preview: ${formatErrorMessage(error)}`,
+    );
+  } finally {
+    image?.close();
   }
 }
 
@@ -117,6 +138,103 @@ function readAscii(
   endExclusive: number,
 ): string {
   return String.fromCharCode(...bytes.slice(startInclusive, endExclusive));
+}
+
+async function decodeHeicInputImage(input: Blob): Promise<ImageBitmap> {
+  try {
+    const { heicTo } = await import("heic-to/next");
+    return await heicTo({ blob: input, type: "bitmap" });
+  } catch (error) {
+    throw new Error(
+      `Unable to decode HEIC/HEIF image: ${formatErrorMessage(error)}`,
+    );
+  }
+}
+
+/**
+ * Builds a lightweight display fallback for browsers that cannot show HEIC.
+ * The processing pipeline still receives the untouched input blob.
+ */
+async function renderImageBitmapToPreviewBlob(
+  image: ImageBitmap,
+): Promise<Blob> {
+  const { width, height } = resolvePreviewSize(image.width, image.height);
+  const canvas = createRasterCanvas(width, height);
+  const context = getRasterContext(canvas);
+
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, 0, 0, width, height);
+
+  if (isOffscreenRasterCanvas(canvas)) {
+    return canvas.convertToBlob({
+      type: "image/jpeg",
+      quality: previewJpegQuality,
+    });
+  }
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob: Blob | null) => {
+        if (blob === null) {
+          reject(new Error("Unable to encode HEIC/HEIF preview."));
+          return;
+        }
+
+        resolve(blob);
+      },
+      "image/jpeg",
+      previewJpegQuality,
+    );
+  });
+}
+
+function resolvePreviewSize(
+  sourceWidth: number,
+  sourceHeight: number,
+): { readonly width: number; readonly height: number } {
+  const scale = Math.min(
+    1,
+    previewMaxEdgePx / Math.max(sourceWidth, sourceHeight),
+  );
+
+  return {
+    width: Math.max(1, Math.round(sourceWidth * scale)),
+    height: Math.max(1, Math.round(sourceHeight * scale)),
+  };
+}
+
+function createRasterCanvas(width: number, height: number): RasterCanvas {
+  if (typeof OffscreenCanvas !== "undefined") {
+    return new OffscreenCanvas(width, height);
+  }
+
+  if (typeof document !== "undefined") {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+  }
+
+  throw new Error("Canvas preview encoding is not available.");
+}
+
+function getRasterContext(canvas: RasterCanvas): RasterContext {
+  const context = canvas.getContext("2d");
+
+  if (context === null) {
+    throw new Error("Unable to create a 2D canvas context.");
+  }
+
+  return context;
+}
+
+function isOffscreenRasterCanvas(
+  canvas: RasterCanvas,
+): canvas is OffscreenCanvas {
+  return (
+    typeof OffscreenCanvas !== "undefined" && canvas instanceof OffscreenCanvas
+  );
 }
 
 function formatErrorMessage(error: unknown): string {
