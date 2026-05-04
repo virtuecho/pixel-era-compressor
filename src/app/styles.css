@@ -228,6 +228,7 @@ select {
 .segmented-control {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
 }
 
 .segmented-control.stacked {
@@ -243,6 +244,11 @@ select {
 
 .segmented-control button + button {
   border-left: 0;
+}
+
+.segmented-control.stacked button + button {
+  border-top: 0;
+  border-left: 1px solid var(--line);
 }
 
 .segmented-control button[aria-pressed="true"] {
@@ -538,7 +544,7 @@ select {
 .settings-panel .field-label,
 .settings-panel .control-group,
 .settings-panel .preset-stats {
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 }
 
 .status-pill {
