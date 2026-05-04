@@ -43,3 +43,16 @@ pnpm check
 ```
 
 Agents must not push. Human maintainers push manually.
+
+## Input formats
+
+The browser app accepts common raster image formats such as JPEG, PNG, WebP,
+GIF, AVIF, BMP, and SVG. HEIC and HEIF uploads are decoded in the image worker
+before the Pixel Era processing pipeline runs.
+
+HEIC/HEIF needs a separate decode step because browser support is uneven:
+Chromium-based browsers often cannot decode iPhone HEIC files directly through
+`createImageBitmap()`. The app converts HEIC/HEIF to an `ImageBitmap` at the
+codec boundary, then sends it through the same crop, resize, optical softness,
+sensor noise, tone, ISP, and JPEG export pipeline as every other input format.
+This is a compatibility path, not a separate visual effect.

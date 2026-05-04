@@ -7,6 +7,9 @@ settings:
 importers:
   .:
     dependencies:
+      heic-to:
+        specifier: ^1.4.2
+        version: 1.4.2
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@19.2.5)
@@ -1667,6 +1670,12 @@ packages:
         integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==,
       }
     engines: { node: ">=8" }
+
+  heic-to@1.4.2:
+    resolution:
+      {
+        integrity: sha512-y69thwxfNcEm2Vk8lbOD/cMabnvMJyOREfJYiCHcXCDqlfcPyJoBhyRc8+iDe1B95LRfpbTOpzxzY1xbRkdwBA==,
+      }
 
   husky@9.1.7:
     resolution:
@@ -3673,6 +3682,8 @@ snapshots:
       unicorn-magic: 0.3.0
 
   has-flag@4.0.0: {}
+
+  heic-to@1.4.2: {}
 
   husky@9.1.7: {}
 

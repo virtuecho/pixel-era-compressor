@@ -1,6 +1,7 @@
 import { ImagePlus, Upload } from "lucide-react";
 import { useId } from "react";
 import type { ReactElement } from "react";
+import { supportedInputImageAccept } from "../imaging/codecs/input-image";
 
 export type ImageUploaderProps = {
   readonly file: File | null;
@@ -22,7 +23,7 @@ export function ImageUploader({
       <input
         id={inputId}
         type="file"
-        accept="image/*"
+        accept={supportedInputImageAccept}
         onChange={(event) => {
           onFileSelected(event.currentTarget.files?.[0] ?? null);
         }}

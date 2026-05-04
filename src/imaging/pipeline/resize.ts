@@ -1,3 +1,4 @@
+import { decodeInputImage } from "../codecs/input-image";
 import { computeCropOrFitPlan, type CropMode } from "./crop-or-fit";
 import { createImageFrame, type ImageFrame } from "./image-frame";
 
@@ -42,11 +43,7 @@ export function getRasterContext(canvas: RasterCanvas): RasterContext {
  * native decoders for real JPEG/PNG/WebP files.
  */
 export async function decodeImageBlob(input: Blob): Promise<ImageBitmap> {
-  if (typeof createImageBitmap === "undefined") {
-    throw new Error("createImageBitmap is not available in this environment.");
-  }
-
-  return createImageBitmap(input);
+  return decodeInputImage(input);
 }
 
 /**
