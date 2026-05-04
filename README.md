@@ -44,6 +44,35 @@ pnpm check
 
 Agents must not push. Human maintainers push manually.
 
+## Browser support
+
+Pixel Era Compressor targets modern browsers that support Vite 7 production
+bundles, module workers, `OffscreenCanvas`, worker-side `createImageBitmap()`,
+and dynamic imports.
+
+Supported browser targets:
+
+- Chrome 107+
+- Edge 107+
+- Firefox 104+
+- Safari 16+
+- Modern Chromium-based browsers at equivalent versions, such as Brave, Opera,
+  and recent Android WebView releases
+- iOS and iPadOS browsers on iOS/iPadOS 16+, where Chrome and Firefox use the
+  same WebKit browser engine family as Safari
+
+Unsupported or not guaranteed:
+
+- Internet Explorer
+- Safari 15 and older
+- iOS and iPadOS 15 and older
+- Old Android WebView releases
+- Browsers that disable workers, module workers, canvas APIs, or dynamic imports
+
+HEIC/HEIF does not require native browser HEIC support, because the app decodes
+HEIC/HEIF in the worker before the normal Pixel Era processing pipeline runs.
+It still requires the modern worker and canvas features listed above.
+
 ## Input formats
 
 The browser app accepts common raster image formats such as JPEG, PNG, WebP,
