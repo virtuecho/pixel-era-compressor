@@ -1,50 +1,104 @@
 # Pixel Era Compressor
 
-A 2000–2013 digital photo compression simulator for early web images, camera phones, compact digital cameras, and pre-computational iPhone-era photography.
+<img
+  src="public/favicon/android-chrome-192x192.png"
+  alt="Pixel Era Compressor logo"
+  width="120"
+  height="120"
+/>
 
-This is not a Y2K fashion filter.
+Pixel Era Compressor is a 2000-2013 digital photo compression simulator for
+early web images, camera phones, compact digital cameras, and
+pre-computational iPhone-era photography.
 
-## What it does
+It is a small browser app for making modern images feel like they came from old
+digital cameras, early phone uploads, and blog-era JPEG workflows.
 
-Pixel Era Compressor turns modern images into historically plausible early digital photos by simulating:
+## What It Simulates
 
-- low native resolution
-- soft optics
-- sensor noise
-- limited dynamic range
-- early JPEG compression
-- device-specific image processing
+Real early digital photos were not just “bad JPEGs.” They usually had low
+native resolution, soft optics, noisy sensors, limited dynamic range, uneven
+white balance, and device-specific sharpening.
 
-## Core devices
+Pixel Era Compressor keeps that order of operations intact:
 
-- Nokia 7650
-- Nokia 3660
-- Nokia N95
-- Motorola ZN5
-- Sony Ericsson C905
-- Nokia N86 8MP
-- iPhone 3GS
-- iPhone 4
-- iPhone 4S
-- iPhone 5
-- iPhone 5s
-- Canon PowerShot G1
-- Casio QV-4000
-- Canon EOS 300D
+```text
+decode
+-> crop or fit
+-> high-quality resize
+-> optical softness
+-> sensor noise
+-> tone and color shift
+-> device ISP signature
+-> JPEG export
+```
 
-## Development
+## What You Can Do
+
+- Drop one image or many images into the app.
+- Pick an era, phone, compact camera, DSLR, or early-web preset.
+- Process everything locally in the browser.
+- Export JPEG results one by one or export every ready image.
+- Upload HEIC/HEIF files from modern phones; the app converts them at the codec
+  boundary before the normal Pixel Era pipeline runs.
+- Install the site as a Progressive Web App on supported desktop and mobile
+  browsers.
+
+## Included Presets
+
+Phone presets include Nokia 7650, Nokia 3660, Nokia N95, Motorola ZN5, Sony
+Ericsson C905, Nokia N86 8MP, iPhone 3GS, iPhone 4, iPhone 4S, iPhone 5, and
+iPhone 5s.
+
+Camera and web presets include Canon PowerShot G1, Casio QV-4000, Canon EOS
+300D / Digital Rebel, Old Web Display, Clear Old Blog, and Early Mobile Upload.
+
+## Local Development
 
 Use pnpm.
 
 ```bash
 pnpm install
 pnpm dev
-pnpm check
 ```
 
-Agents must not push. Human maintainers push manually.
+`pnpm dev` starts the Vite development server. It is meant for local work and
+keeps running until you stop it.
 
-## Install as an app
+For the full local gate, run:
+
+```bash
+pnpm check
+pnpm build
+```
+
+Preview the production build locally with:
+
+```bash
+pnpm preview
+```
+
+## Deployment
+
+This is a Vite static app. Deployment should build the project, write static
+files into `dist`, then exit.
+
+Use this shape for any static host or self-hosted server:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+```
+
+Then serve the generated `dist` directory.
+
+`pnpm dev` is only for local development. It starts a Vite development server
+and keeps running, so it should not be used as a deployment build command.
+
+The GitHub Actions workflow also runs `pnpm build` after checks, so CI catches
+production build failures before deployment.
+
+## Install as an App
 
 Pixel Era Compressor ships as an installable Progressive Web App. In supported
 desktop and mobile browsers, use the browser's install, add-to-home-screen, or
@@ -53,7 +107,7 @@ share-menu install action after opening the production site.
 The installed app still runs the same local browser pipeline: batch uploads,
 HEIC/HEIF decoding, previews, and JPEG exports happen on-device.
 
-## Browser support
+## Browser Support
 
 Pixel Era Compressor targets modern browsers that support Vite 7 production
 bundles, module workers, `OffscreenCanvas`, worker-side `createImageBitmap()`,
@@ -82,7 +136,7 @@ HEIC/HEIF does not require native browser HEIC support, because the app decodes
 HEIC/HEIF in the worker before the normal Pixel Era processing pipeline runs.
 It still requires the modern worker and canvas features listed above.
 
-## Input formats
+## Input Formats
 
 The browser app accepts common raster image formats such as JPEG, PNG, WebP,
 GIF, AVIF, BMP, and SVG. HEIC and HEIF uploads are decoded in the image worker
@@ -94,3 +148,7 @@ Chromium-based browsers often cannot decode iPhone HEIC files directly through
 codec boundary, then sends it through the same crop, resize, optical softness,
 sensor noise, tone, ISP, and JPEG export pipeline as every other input format.
 This is a compatibility path, not a separate visual effect.
+
+## Agent Notes
+
+Agents must not push. Human maintainers push manually.
