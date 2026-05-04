@@ -66,12 +66,40 @@ decode
 
 ## Included Presets
 
+The first-run default is iPhone 3GS with Normal intensity and Center crop.
+
 Phone presets include Nokia 7650, Nokia 3660, Nokia N95, Motorola ZN5, Sony
 Ericsson C905, Nokia N86 8MP, iPhone 3GS, iPhone 4, iPhone 4S, iPhone 5, and
 iPhone 5s.
 
 Camera and web presets include Canon PowerShot G1, Casio QV-4000, Canon EOS
 300D / Digital Rebel, Old Web Display, Clear Old Blog, and Early Mobile Upload.
+
+<details>
+
+<summary>Preset image settings</summary>
+
+| Preset                         | Year | Output      | JPEG Q | Representative settings                                                                                                                   |
+| ------------------------------ | ---: | ----------- | -----: | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Old Web Display                | 2001 | 640 × 480   |     48 | Low web resolution, soft resize, visible noise, limited dynamic range, weak sharpening, no flash, tiny portrait mode                      |
+| Clear Old Blog                 | 2005 | 800 × 600   |     58 | Blog-size output, moderate softness, lighter noise, mild contrast, light JPEG compression, no flash                                       |
+| Early Mobile Upload            | 2009 | 1024 × 768  |     64 | Mobile-upload size, cleaner resize, mild sensor noise, slight warmth, moderate sharpening, no flash                                       |
+| Nokia 7650                     | 2002 | 640 × 480   |     34 | VGA phone output, very soft optics, heavy luma and chroma noise, strong dynamic-range loss, weak sharpening, no flash, tiny portrait mode |
+| Nokia 3660                     | 2003 | 640 × 480   |     36 | VGA phone output, very soft optics, heavy noise, crushed shadows, weak sharpening, no flash, tiny portrait mode                           |
+| Nokia N95                      | 2007 | 2592 × 1944 |     56 | 5MP phone output, moderate optical softness, medium noise, stronger sharpening, LED flash                                                 |
+| Motorola ZN5                   | 2008 | 2560 × 1920 |     58 | 5MP phone output, lower softness, medium noise, warmer color, stronger sharpening, xenon flash                                            |
+| Sony Ericsson C905             | 2008 | 3264 × 2448 |     64 | 8MP phone output, cleaner optics, lower noise, higher saturation, moderate denoise, xenon flash                                           |
+| Nokia N86 8MP                  | 2009 | 3264 × 2448 |     66 | 8MP phone output, wide-angle look, moderate noise, restrained color, LED flash                                                            |
+| iPhone 3GS                     | 2009 | 2048 × 1536 |     52 | 3MP iPhone output, soft fixed-focus feel, medium noise, limited dynamic range, light sharpening, no flash                                 |
+| iPhone 4                       | 2010 | 2592 × 1936 |     62 | 5MP iPhone output, cleaner optics, lower noise, more contrast, LED flash                                                                  |
+| iPhone 4S                      | 2011 | 3264 × 2448 |     70 | 8MP iPhone output, cleaner sensor, lighter noise, balanced color, LED flash                                                               |
+| iPhone 5                       | 2012 | 3264 × 2448 |     72 | 8MP iPhone output, mild softness, light noise, steady contrast, LED flash                                                                 |
+| iPhone 5s                      | 2013 | 3264 × 2448 |     76 | Late pre-computational iPhone output, lowest phone noise, mild dynamic-range loss, true-tone flash                                        |
+| Canon PowerShot G1             | 2000 | 2048 × 1536 |     78 | 3.34MP compact-camera output, CCD look, mild softness, controlled noise, xenon flash, 4:2:2 JPEG                                          |
+| Casio QV-4000                  | 2001 | 2240 × 1680 |     76 | 4MP compact-camera output, CCD look, mild softness, moderate compact-camera contrast, xenon flash, 4:2:2 JPEG                             |
+| Canon EOS 300D / Digital Rebel | 2003 | 3072 × 2048 |     86 | Early DSLR output, 3:2 frame, minimal softness, low noise, restrained color, xenon flash, 4:2:2 JPEG                                      |
+
+</details>
 
 ## Local Development
 

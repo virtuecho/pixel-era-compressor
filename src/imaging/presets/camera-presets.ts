@@ -542,7 +542,7 @@ export function findCameraPreset(id: string): CameraPreset | undefined {
 }
 
 export function getDefaultCameraPreset(): CameraPreset {
-  return cameraPresets[0];
+  return findCameraPreset("iphone-3gs") ?? cameraPresets[0];
 }
 
 export function compareCameraPresetsByEra(
