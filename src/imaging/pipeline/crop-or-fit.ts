@@ -54,21 +54,9 @@ export function computeCropOrFitPlan(
   }
 
   if (cropMode === "fill") {
-    const scale = Math.max(
-      target.width / source.width,
-      target.height / source.height,
-    );
-    const width = source.width * scale;
-    const height = source.height * scale;
-
     return {
       source: { x: 0, y: 0, width: source.width, height: source.height },
-      destination: {
-        x: (target.width - width) / 2,
-        y: (target.height - height) / 2,
-        width,
-        height,
-      },
+      destination: { x: 0, y: 0, width: target.width, height: target.height },
       fillsTargetCanvas: true,
     };
   }
