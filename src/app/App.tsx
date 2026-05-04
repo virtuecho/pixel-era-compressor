@@ -465,6 +465,7 @@ export function App(): ReactElement {
           presetLabel={preset.label}
           isSourceProcessing={isActiveSourceProcessing}
           isProcessing={activeJobStatus === "processing"}
+          onSourceFilesSelected={handleFilesSelected}
           onSourceError={handleSourcePreviewError}
         />
 

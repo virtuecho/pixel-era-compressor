@@ -341,7 +341,33 @@ select {
   object-fit: contain;
 }
 
+.empty-preview input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+}
+
+.empty-preview-upload {
+  display: inline-grid;
+  place-items: center;
+  gap: 8px;
+  color: #d7ddd6;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.empty-preview-upload:hover {
+  color: #ffffff;
+}
+
+.empty-preview[data-dragging="true"] {
+  background: var(--accent-strong);
+}
+
 .empty-preview {
+  position: relative;
   color: #aeb7ae;
 }
 
@@ -349,6 +375,10 @@ select {
   margin-top: 8px;
   color: #d7ddd6;
   font-size: 0.9rem;
+}
+
+.empty-preview-upload span {
+  margin-top: 0;
 }
 
 .primary-button {
