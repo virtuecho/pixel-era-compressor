@@ -68,6 +68,20 @@ a.primary-button,
   border-bottom: 1px solid var(--line);
 }
 
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.brand-mark img {
+  display: block;
+  inline-size: 32px;
+  block-size: 32px;
+  flex: 0 0 auto;
+}
+
 .top-nav {
   display: flex;
   align-items: center;
@@ -104,19 +118,9 @@ h1 {
 }
 
 .about-panel {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
   padding: 14px 16px;
   border-bottom: 1px solid var(--line);
   background: #f2f5f2;
-}
-
-.about-panel img {
-  display: block;
-  inline-size: 56px;
-  block-size: 56px;
 }
 
 .about-panel p {

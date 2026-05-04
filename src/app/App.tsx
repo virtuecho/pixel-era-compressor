@@ -414,7 +414,16 @@ export function App(): ReactElement {
     <main className="app-shell">
       <section className="site-frame" aria-label="Pixel Era Compressor">
         <header className="top-bar">
-          <h1>Pixel Era Compressor</h1>
+          <div className="brand-mark">
+            <img
+              src="/favicon/favicon-32x32.png"
+              width="20"
+              height="20"
+              alt=""
+              aria-hidden="true"
+            />
+            <h1>Pixel Era Compressor</h1>
+          </div>
           <nav className="top-nav" aria-label="Project links">
             <button
               type="button"
@@ -438,13 +447,6 @@ export function App(): ReactElement {
 
         {isAboutVisible ? (
           <section id="about-panel" className="about-panel">
-            <img
-              src="/favicon/android-chrome-192x192.png"
-              width="56"
-              height="56"
-              alt=""
-              aria-hidden="true"
-            />
             <p>{appIntro}</p>
           </section>
         ) : null}
