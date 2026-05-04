@@ -544,3 +544,20 @@ export function findCameraPreset(id: string): CameraPreset | undefined {
 export function getDefaultCameraPreset(): CameraPreset {
   return cameraPresets[0];
 }
+
+export function compareCameraPresetsByEra(
+  left: CameraPreset,
+  right: CameraPreset,
+): number {
+  return (
+    left.year - right.year ||
+    left.label.localeCompare(right.label) ||
+    left.id.localeCompare(right.id)
+  );
+}
+
+export function sortCameraPresetsByEra(
+  presets: readonly CameraPreset[],
+): CameraPreset[] {
+  return [...presets].sort(compareCameraPresetsByEra);
+}

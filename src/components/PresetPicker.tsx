@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { sortCameraPresetsByEra } from "../imaging/presets/camera-presets";
 import type { CameraPreset } from "../imaging/presets/preset-types";
 
 export type PresetPickerProps = {
@@ -33,13 +34,13 @@ export function PresetPicker({
       >
         {categories.map((category) => (
           <optgroup key={category.value} label={category.label}>
-            {presets
-              .filter((preset) => preset.category === category.value)
-              .map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.label}
-                </option>
-              ))}
+            {sortCameraPresetsByEra(
+              presets.filter((preset) => preset.category === category.value),
+            ).map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.year} - {preset.label}
+              </option>
+            ))}
           </optgroup>
         ))}
       </select>

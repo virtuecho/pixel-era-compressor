@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { cameraPresets } from "../imaging/presets/camera-presets";
+import {
+  cameraPresets,
+  sortCameraPresetsByEra,
+} from "../imaging/presets/camera-presets";
 import { aspectRatioValue } from "../imaging/presets/preset-types";
 
 const requiredPresetIds = [
@@ -40,6 +43,22 @@ describe("camera presets", () => {
       expect(Math.abs(actualRatio - expectedRatio)).toBeLessThan(0.02);
       expect(preset.isp.jpegQuality).toBeGreaterThanOrEqual(1);
       expect(preset.isp.jpegQuality).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it("sorts visible presets by era within every category", () => {
+    const categories = new Set(cameraPresets.map((preset) => preset.category));
+
+    for (const category of categories) {
+      const sortedPresets = sortCameraPresetsByEra(
+        cameraPresets.filter((preset) => preset.category === category),
+      );
+
+      for (let index = 1; index < sortedPresets.length; index += 1) {
+        expect(sortedPresets[index - 1].year).toBeLessThanOrEqual(
+          sortedPresets[index].year,
+        );
+      }
     }
   });
 });
