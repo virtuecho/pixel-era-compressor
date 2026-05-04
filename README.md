@@ -44,6 +44,26 @@ decode
 - Install the site as a Progressive Web App on supported desktop and mobile
   browsers.
 
+## Settings
+
+- Preset chooses the historical output profile. It controls the device or web
+  target, output pixel size, year, JPEG quality, optical softness, sensor noise,
+  tone curve, color bias, and device ISP signature.
+- Format is currently JPEG. The app exports JPEG because early web and camera
+  phone photos were usually shared as JPEG files.
+- Quality shows the preset's JPEG quality value. It is preset-driven rather
+  than a separate manual slider, so a Nokia 7650-style output and an iPhone
+  5s-style output do not compress the image in the same way.
+- Intensity controls how strongly the selected preset is applied. Mild keeps
+  the look subtle, with less softness, noise, tone compression, and ISP
+  character. Normal is the intended default balance for the preset. Strong
+  pushes the same preset harder for more obvious old-device degradation.
+- Crop mode controls how the source image is mapped into the preset's output
+  shape. Center crop fills the output and trims from the center when needed.
+  Fit inside keeps the whole source visible and may leave dark padding. Fill
+  stretches the whole source image to the output shape without cropping or
+  padding.
+
 ## Included Presets
 
 Phone presets include Nokia 7650, Nokia 3660, Nokia N95, Motorola ZN5, Sony
