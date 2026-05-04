@@ -81,8 +81,10 @@ The tool must make photos look as if they were captured or uploaded during the 2
 3. Avoid visible jagged edges after compression.
 4. Simulate realistic old-device imperfections.
 5. Export JPEG by default.
-6. Run locally in the browser whenever possible.
-7. Provide enough engineering structure for agents to continue development safely.
+6. Process one or more uploaded images with the same selected preset and export
+   each result.
+7. Run locally in the browser whenever possible.
+8. Provide enough engineering structure for agents to continue development safely.
 
 ---
 
@@ -326,6 +328,7 @@ MVP is acceptable when:
 ### Phase 1: MVP
 
 - Upload image
+- Batch upload and shared-setting conversion
 - Preset selection
 - High-quality resize
 - Softness, noise, tone curve
@@ -343,7 +346,7 @@ MVP is acceptable when:
 
 - WASM MozJPEG
 - EXIF simulation
-- Batch export
+- ZIP archive export for large batches
 - Preset JSON import/export
 
 ### Phase 4: Documentation and examples

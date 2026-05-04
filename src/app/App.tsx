@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { BeforeAfterPreview } from "../components/BeforeAfterPreview";
@@ -15,13 +15,36 @@ import type { CropMode } from "../imaging/pipeline/crop-or-fit";
 import type {
   ImageWorkerRequest,
   ImageWorkerResponse,
+  ImageWorkerSuccess,
 } from "../imaging/workers/worker-protocol";
 
-type ProcessingState =
-  | { readonly status: "idle" }
-  | { readonly status: "processing" }
-  | { readonly status: "ready"; readonly blob: Blob }
-  | { readonly status: "error"; readonly message: string };
+type ImageJobStatus = "queued" | "processing" | "ready" | "error";
+
+type ImageJob = {
+  readonly id: string;
+  readonly file: File;
+  readonly configKey: string;
+  readonly status: ImageJobStatus;
+  readonly outputBlob: Blob | null;
+  readonly outputUrl: string | null;
+  readonly metadata: ImageWorkerSuccess["metadata"] | null;
+  readonly errorMessage: string | null;
+};
+
+type BatchStats = {
+  readonly totalCount: number;
+  readonly inputBytes: number;
+  readonly outputBytes: number;
+  readonly readyCount: number;
+  readonly processingCount: number;
+  readonly queuedCount: number;
+  readonly errorCount: number;
+};
+
+type ParsedWorkerRequestId = {
+  readonly jobId: string;
+  readonly configKey: string;
+};
 
 const cropModes = [
   { value: "center-crop", label: "Center crop" },
@@ -44,28 +67,51 @@ const intensities = [
 export function App(): ReactElement {
   const workerRef = useRef<Worker | null>(null);
   const requestCounter = useRef(0);
-  const [sourceFile, setSourceFile] = useState<File | null>(null);
-  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
-  const [outputUrl, setOutputUrl] = useState<string | null>(null);
-  const [processingState, setProcessingState] = useState<ProcessingState>({
-    status: "idle",
-  });
+  const imageJobsRef = useRef<readonly ImageJob[]>([]);
+  const processingConfigKeyRef = useRef("");
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
+  const [imageJobs, setImageJobs] = useState<readonly ImageJob[]>([]);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [activeSourceUrl, setActiveSourceUrl] = useState<string | null>(null);
   const [selectedPresetId, setSelectedPresetId] = useState(
     getDefaultCameraPreset().id,
   );
   const [intensity, setIntensity] = useState<ProcessingIntensity>("normal");
   const [cropMode, setCropMode] = useState<CropMode>("center-crop");
   const preset = findCameraPreset(selectedPresetId) ?? getDefaultCameraPreset();
-  const outputBlob =
-    processingState.status === "ready" ? processingState.blob : null;
-  const exportFilename = useMemo(() => {
-    const stem = sourceFile?.name.replace(/\.[^.]+$/, "") ?? "pixel-era";
-    return `${stem}-${preset.id}.jpg`;
-  }, [preset.id, sourceFile?.name]);
-  const savedPercent =
-    sourceFile !== null && outputBlob !== null
-      ? Math.max(0, 1 - outputBlob.size / sourceFile.size) * 100
+  const processingConfigKey = `${preset.id}|${intensity}|${cropMode}`;
+  const activeJob = useMemo(
+    () => findActiveJob(imageJobs, activeJobId),
+    [activeJobId, imageJobs],
+  );
+  const activeFile = activeJob === null ? null : activeJob.file;
+  const activeJobStatus =
+    activeJob === null
+      ? null
+      : getCurrentJobStatus(activeJob, processingConfigKey);
+  const activeOutputUrl =
+    activeJob !== null && activeJobStatus === "ready"
+      ? activeJob.outputUrl
       : null;
+  const activeOutputBlob =
+    activeJob !== null && activeJobStatus === "ready"
+      ? activeJob.outputBlob
+      : null;
+  const exportFilename = useMemo(() => {
+    return formatExportFilename(activeFile, preset.id);
+  }, [activeFile, preset.id]);
+  const batchStats = useMemo(
+    () => getBatchStats(imageJobs, processingConfigKey),
+    [imageJobs, processingConfigKey],
+  );
+
+  useEffect(() => {
+    processingConfigKeyRef.current = processingConfigKey;
+  }, [processingConfigKey]);
+
+  useEffect(() => {
+    imageJobsRef.current = imageJobs;
+  }, [imageJobs]);
 
   useEffect(() => {
     const worker = new Worker(
@@ -73,57 +119,92 @@ export function App(): ReactElement {
       { type: "module" },
     );
 
+    function handleMessage(event: MessageEvent<ImageWorkerResponse>): void {
+      handleWorkerResponse(event.data);
+    }
+
+    worker.addEventListener("message", handleMessage);
     workerRef.current = worker;
+    setIsWorkerReady(true);
 
     return () => {
+      setIsWorkerReady(false);
+      worker.removeEventListener("message", handleMessage);
       worker.terminate();
       workerRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (sourceFile === null) {
-      setSourceUrl(null);
+    return () => {
+      revokeJobOutputUrls(imageJobsRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeFile === null) {
+      setActiveSourceUrl(null);
       return undefined;
     }
 
-    const nextSourceUrl = URL.createObjectURL(sourceFile);
-    setSourceUrl(nextSourceUrl);
+    const nextSourceUrl = URL.createObjectURL(activeFile);
+    setActiveSourceUrl(nextSourceUrl);
 
     return () => {
       URL.revokeObjectURL(nextSourceUrl);
     };
-  }, [sourceFile]);
+  }, [activeFile]);
 
   useEffect(() => {
-    if (processingState.status !== "ready") {
-      setOutputUrl(null);
-      return undefined;
+    if (
+      imageJobs.length === 0 ||
+      (activeJobId !== null && imageJobs.some((job) => job.id === activeJobId))
+    ) {
+      return;
     }
 
-    const nextOutputUrl = URL.createObjectURL(processingState.blob);
-    setOutputUrl(nextOutputUrl);
-
-    return () => {
-      URL.revokeObjectURL(nextOutputUrl);
-    };
-  }, [processingState]);
+    setActiveJobId(imageJobs[0]?.id ?? null);
+  }, [activeJobId, imageJobs]);
 
   useEffect(() => {
     const worker = workerRef.current;
 
-    if (sourceFile === null || worker === null) {
-      setProcessingState({
-        status: sourceFile === null ? "idle" : "processing",
-      });
-      return undefined;
+    if (worker === null || !isWorkerReady || imageJobs.length === 0) {
+      return;
     }
 
-    const requestId = `${String(Date.now())}-${String(requestCounter.current)}`;
+    const hasActiveProcessingJob = imageJobs.some((job) => {
+      return (
+        job.configKey === processingConfigKey && job.status === "processing"
+      );
+    });
+
+    if (hasActiveProcessingJob) {
+      return;
+    }
+
+    const nextJob = imageJobs.find((job) => {
+      return job.configKey !== processingConfigKey || job.status === "queued";
+    });
+
+    if (nextJob === undefined) {
+      return;
+    }
+
+    if (nextJob.outputUrl !== null) {
+      URL.revokeObjectURL(nextJob.outputUrl);
+    }
+
+    const requestId = createWorkerRequestId(
+      nextJob.id,
+      processingConfigKey,
+      requestCounter.current,
+    );
     requestCounter.current += 1;
+
     const request: ImageWorkerRequest = {
       id: requestId,
-      input: sourceFile,
+      input: nextJob.file,
       presetId: preset.id,
       options: {
         cropMode,
@@ -132,28 +213,131 @@ export function App(): ReactElement {
       },
     };
 
-    setProcessingState({ status: "processing" });
+    setImageJobs((currentJobs) => {
+      const nextJobs = currentJobs.map((job) => {
+        if (job.id !== nextJob.id) {
+          return job;
+        }
 
-    const handleMessage = (event: MessageEvent<ImageWorkerResponse>): void => {
-      if (event.data.id !== requestId) {
-        return;
-      }
+        return {
+          ...job,
+          configKey: processingConfigKey,
+          status: "processing" as const,
+          outputBlob: null,
+          outputUrl: null,
+          metadata: null,
+          errorMessage: null,
+        };
+      });
+      imageJobsRef.current = nextJobs;
+      return nextJobs;
+    });
 
-      if (event.data.ok) {
-        setProcessingState({ status: "ready", blob: event.data.blob });
-        return;
-      }
-
-      setProcessingState({ status: "error", message: event.data.message });
-    };
-
-    worker.addEventListener("message", handleMessage);
     worker.postMessage(request);
+  }, [
+    cropMode,
+    imageJobs,
+    intensity,
+    isWorkerReady,
+    preset.id,
+    preset.year,
+    processingConfigKey,
+  ]);
 
-    return () => {
-      worker.removeEventListener("message", handleMessage);
-    };
-  }, [cropMode, intensity, preset.id, preset.year, sourceFile]);
+  function handleFilesSelected(files: readonly File[]): void {
+    const nextJobs = files.map((file) => {
+      const id = `image-${Date.now().toString(36)}-${requestCounter.current.toString(36)}`;
+      requestCounter.current += 1;
+      return createImageJob(id, file);
+    });
+
+    revokeJobOutputUrls(imageJobsRef.current);
+    imageJobsRef.current = nextJobs;
+    setImageJobs(nextJobs);
+    setActiveJobId(nextJobs[0]?.id ?? null);
+  }
+
+  function handleWorkerResponse(response: ImageWorkerResponse): void {
+    const parsedRequest = parseWorkerRequestId(response.id);
+
+    if (parsedRequest === null) {
+      return;
+    }
+
+    const currentJob = imageJobsRef.current.find((job) => {
+      return job.id === parsedRequest.jobId;
+    });
+
+    if (
+      currentJob?.configKey !== parsedRequest.configKey ||
+      parsedRequest.configKey !== processingConfigKeyRef.current
+    ) {
+      return;
+    }
+
+    if (currentJob.outputUrl !== null) {
+      URL.revokeObjectURL(currentJob.outputUrl);
+    }
+
+    const nextOutputUrl = response.ok
+      ? URL.createObjectURL(response.blob)
+      : null;
+
+    setImageJobs((currentJobs) => {
+      const nextJobs = currentJobs.map((job) => {
+        if (
+          job.id !== parsedRequest.jobId ||
+          job.configKey !== parsedRequest.configKey
+        ) {
+          return job;
+        }
+
+        if (response.ok) {
+          return {
+            ...job,
+            status: "ready" as const,
+            outputBlob: response.blob,
+            outputUrl: nextOutputUrl,
+            metadata: response.metadata,
+            errorMessage: null,
+          };
+        }
+
+        return {
+          ...job,
+          status: "error" as const,
+          outputBlob: null,
+          outputUrl: null,
+          metadata: null,
+          errorMessage: response.message,
+        };
+      });
+      imageJobsRef.current = nextJobs;
+      return nextJobs;
+    });
+  }
+
+  function exportReadyJobs(): void {
+    const readyJobs = imageJobs.filter((job) => {
+      return (
+        getCurrentJobStatus(job, processingConfigKey) === "ready" &&
+        job.outputUrl !== null
+      );
+    });
+
+    for (const job of readyJobs) {
+      if (job.outputUrl === null) {
+        continue;
+      }
+
+      const link = document.createElement("a");
+      link.href = job.outputUrl;
+      link.download = formatExportFilename(job.file, preset.id);
+      document.body.append(link);
+      link.click();
+      link.remove();
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -179,14 +363,17 @@ export function App(): ReactElement {
         </header>
 
         <div className="upload-strip">
-          <ImageUploader file={sourceFile} onFileSelected={setSourceFile} />
+          <ImageUploader
+            files={imageJobs.map((job) => job.file)}
+            onFilesSelected={handleFilesSelected}
+          />
         </div>
 
         <BeforeAfterPreview
-          sourceUrl={sourceUrl}
-          outputUrl={outputUrl}
+          sourceUrl={activeSourceUrl}
+          outputUrl={activeOutputUrl}
           presetLabel={preset.label}
-          isProcessing={processingState.status === "processing"}
+          isProcessing={activeJobStatus === "processing"}
         />
 
         <section className="lower-grid">
@@ -195,28 +382,85 @@ export function App(): ReactElement {
             <dl className="info-list">
               <div>
                 <dt>Input</dt>
-                <dd>{formatFileSummary(sourceFile)}</dd>
+                <dd>{formatInputSummary(batchStats)}</dd>
               </div>
               <div>
                 <dt>Output</dt>
-                <dd>{formatOutputSummary(outputBlob)}</dd>
+                <dd>{formatOutputSummary(batchStats)}</dd>
               </div>
               <div>
                 <dt>Saved</dt>
-                <dd>
-                  {savedPercent === null
-                    ? "Waiting"
-                    : `${savedPercent.toFixed(1)}%`}
-                </dd>
+                <dd>{formatSavedSummary(batchStats)}</dd>
               </div>
               <div>
                 <dt>Status</dt>
-                <dd>{formatProcessingStatus(processingState)}</dd>
+                <dd>{formatBatchStatus(batchStats)}</dd>
               </div>
             </dl>
-            {processingState.status === "error" ? (
-              <p className="error-message">{processingState.message}</p>
-            ) : null}
+
+            <section className="batch-list" aria-label="Batch queue">
+              <div className="batch-list-header">
+                <span>Batch Queue</span>
+                <span>{formatQueueHeader(batchStats)}</span>
+              </div>
+              {imageJobs.length === 0 ? (
+                <p className="empty-note">No images queued.</p>
+              ) : (
+                <ol className="queue-list">
+                  {imageJobs.map((job, index) => {
+                    const status = getCurrentJobStatus(
+                      job,
+                      processingConfigKey,
+                    );
+                    const isActive =
+                      activeJob !== null && job.id === activeJob.id;
+
+                    return (
+                      <li
+                        key={job.id}
+                        className="queue-row"
+                        data-active={isActive}
+                      >
+                        <button
+                          type="button"
+                          className="queue-select-button"
+                          aria-pressed={isActive}
+                          onClick={() => {
+                            setActiveJobId(job.id);
+                          }}
+                        >
+                          <span className="queue-name">
+                            {String(index + 1)}. {job.file.name}
+                          </span>
+                          <span className="queue-meta">
+                            {formatBytes(job.file.size)} input /{" "}
+                            {formatJobOutput(job, status)}
+                          </span>
+                          {status === "error" && job.errorMessage !== null ? (
+                            <span className="queue-error">
+                              {job.errorMessage}
+                            </span>
+                          ) : null}
+                        </button>
+                        <span className="queue-status">
+                          {formatJobStatus(status)}
+                        </span>
+                        {status === "ready" && job.outputUrl !== null ? (
+                          <a
+                            className="queue-export"
+                            href={job.outputUrl}
+                            download={formatExportFilename(job.file, preset.id)}
+                            aria-label={`Export ${job.file.name}`}
+                          >
+                            <Download size={16} aria-hidden="true" />
+                          </a>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </section>
           </section>
 
           <aside className="settings-panel" aria-label="Processing settings">
@@ -287,40 +531,221 @@ export function App(): ReactElement {
               </div>
             </dl>
 
-            <ExportPanel
-              outputUrl={outputUrl}
-              filename={exportFilename}
-              disabled={processingState.status !== "ready"}
-            />
+            <div className="export-actions">
+              <ExportPanel
+                outputUrl={activeOutputUrl}
+                filename={exportFilename}
+                disabled={activeOutputBlob === null}
+                label="Export selected"
+              />
+              <button
+                type="button"
+                className="primary-button batch-export-button"
+                disabled={batchStats.readyCount === 0}
+                onClick={exportReadyJobs}
+              >
+                <Download size={17} aria-hidden="true" />
+                Export ready ({String(batchStats.readyCount)})
+              </button>
+            </div>
           </aside>
         </section>
       </section>
 
-      {processingState.status === "processing" ? (
+      {batchStats.processingCount > 0 ? (
         <div className="status-pill" role="status">
           <Loader2 size={16} className="spin" />
-          Processing
+          Processing {String(batchStats.readyCount + 1)} of{" "}
+          {String(batchStats.totalCount)}
         </div>
       ) : null}
     </main>
   );
 }
 
-function formatFileSummary(file: File | null): string {
-  if (file === null) {
+function createImageJob(id: string, file: File): ImageJob {
+  return {
+    id,
+    file,
+    configKey: "",
+    status: "queued",
+    outputBlob: null,
+    outputUrl: null,
+    metadata: null,
+    errorMessage: null,
+  };
+}
+
+function findActiveJob(
+  jobs: readonly ImageJob[],
+  activeJobId: string | null,
+): ImageJob | null {
+  const selectedJob =
+    activeJobId === null
+      ? undefined
+      : jobs.find((job) => job.id === activeJobId);
+
+  if (selectedJob !== undefined) {
+    return selectedJob;
+  }
+
+  return jobs.length > 0 ? jobs[0] : null;
+}
+
+function createWorkerRequestId(
+  jobId: string,
+  configKey: string,
+  counter: number,
+): string {
+  return `${jobId}::${configKey}::${counter.toString(36)}`;
+}
+
+function parseWorkerRequestId(id: string): ParsedWorkerRequestId | null {
+  const parts = id.split("::");
+
+  if (parts.length < 3) {
+    return null;
+  }
+
+  return {
+    jobId: parts[0] ?? "",
+    configKey: parts.slice(1, -1).join("::"),
+  };
+}
+
+function getCurrentJobStatus(
+  job: ImageJob,
+  processingConfigKey: string,
+): ImageJobStatus {
+  if (job.configKey !== processingConfigKey) {
+    return "queued";
+  }
+
+  return job.status;
+}
+
+function getBatchStats(
+  jobs: readonly ImageJob[],
+  processingConfigKey: string,
+): BatchStats {
+  return jobs.reduce<BatchStats>(
+    (stats, job) => {
+      const status = getCurrentJobStatus(job, processingConfigKey);
+      const outputBytes =
+        status === "ready" && job.outputBlob !== null ? job.outputBlob.size : 0;
+
+      return {
+        totalCount: stats.totalCount + 1,
+        inputBytes: stats.inputBytes + job.file.size,
+        outputBytes: stats.outputBytes + outputBytes,
+        readyCount: stats.readyCount + (status === "ready" ? 1 : 0),
+        processingCount:
+          stats.processingCount + (status === "processing" ? 1 : 0),
+        queuedCount: stats.queuedCount + (status === "queued" ? 1 : 0),
+        errorCount: stats.errorCount + (status === "error" ? 1 : 0),
+      };
+    },
+    {
+      totalCount: 0,
+      inputBytes: 0,
+      outputBytes: 0,
+      readyCount: 0,
+      processingCount: 0,
+      queuedCount: 0,
+      errorCount: 0,
+    },
+  );
+}
+
+function revokeJobOutputUrls(jobs: readonly ImageJob[]): void {
+  for (const job of jobs) {
+    if (job.outputUrl !== null) {
+      URL.revokeObjectURL(job.outputUrl);
+    }
+  }
+}
+
+function formatExportFilename(file: File | null, presetId: string): string {
+  const stem = file?.name.replace(/\.[^.]+$/, "") ?? "pixel-era";
+  return `${stem}-${presetId}.jpg`;
+}
+
+function formatInputSummary(stats: BatchStats): string {
+  if (stats.totalCount === 0) {
     return "No file";
   }
 
-  const extension = file.name.split(".").at(-1)?.toUpperCase() ?? "IMAGE";
-  return `${formatBytes(file.size)} ${extension}`;
+  return `${String(stats.totalCount)} ${pluralizeImage(stats.totalCount)} / ${formatBytes(stats.inputBytes)}`;
 }
 
-function formatOutputSummary(blob: Blob | null): string {
-  if (blob === null) {
+function formatOutputSummary(stats: BatchStats): string {
+  if (stats.readyCount === 0) {
     return "Waiting";
   }
 
-  return `${formatBytes(blob.size)} JPG`;
+  return `${String(stats.readyCount)}/${String(stats.totalCount)} ready / ${formatBytes(stats.outputBytes)} JPG`;
+}
+
+function formatSavedSummary(stats: BatchStats): string {
+  if (stats.readyCount === 0 || stats.inputBytes === 0) {
+    return "Waiting";
+  }
+
+  const savedPercent = Math.max(0, 1 - stats.outputBytes / stats.inputBytes);
+  const suffix = stats.readyCount === stats.totalCount ? "" : " partial";
+  return `${(savedPercent * 100).toFixed(1)}%${suffix}`;
+}
+
+function formatBatchStatus(stats: BatchStats): string {
+  if (stats.totalCount === 0) {
+    return "Ready";
+  }
+
+  if (stats.processingCount > 0) {
+    return `Processing ${String(stats.readyCount + 1)} of ${String(stats.totalCount)}`;
+  }
+
+  if (
+    stats.errorCount > 0 &&
+    stats.readyCount + stats.errorCount === stats.totalCount
+  ) {
+    return `Complete with ${String(stats.errorCount)} ${pluralizeError(stats.errorCount)}`;
+  }
+
+  if (stats.readyCount === stats.totalCount) {
+    return "Complete";
+  }
+
+  return "Queued";
+}
+
+function formatQueueHeader(stats: BatchStats): string {
+  if (stats.totalCount === 0) {
+    return "0 images";
+  }
+
+  return `${String(stats.readyCount)} ready / ${String(stats.totalCount)} total`;
+}
+
+function formatJobOutput(job: ImageJob, status: ImageJobStatus): string {
+  if (status === "ready" && job.outputBlob !== null) {
+    return `${formatBytes(job.outputBlob.size)} JPG`;
+  }
+
+  return formatJobStatus(status);
+}
+
+function formatJobStatus(status: ImageJobStatus): string {
+  switch (status) {
+    case "queued":
+      return "Queued";
+    case "processing":
+      return "Processing";
+    case "ready":
+      return "Ready";
+    case "error":
+      return "Error";
+  }
 }
 
 function formatBytes(bytes: number): string {
@@ -340,15 +765,10 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(value >= 10 ? 1 : 2)} ${units[unitIndex]}`;
 }
 
-function formatProcessingStatus(processingState: ProcessingState): string {
-  switch (processingState.status) {
-    case "idle":
-      return "Ready";
-    case "processing":
-      return "Processing";
-    case "ready":
-      return "Complete";
-    case "error":
-      return "Error";
-  }
+function pluralizeImage(count: number): string {
+  return count === 1 ? "image" : "images";
+}
+
+function pluralizeError(count: number): string {
+  return count === 1 ? "error" : "errors";
 }

@@ -159,9 +159,9 @@ Unit tests should cover:
 
 Integration tests should cover:
 
-- upload -> process -> preview
+- upload one or more images -> process queue -> preview selected result
 - preset change updates output dimensions
-- export produces a downloadable file
+- export produces downloadable files
 
 ---
 
