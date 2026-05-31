@@ -19,8 +19,8 @@ export type DeviceIspOptions = {
  *
  * The important historical behavior is the tension between denoising and
  * sharpening: old phones often smeared texture but still left small halos near
- * edges. The final vignette and tiny channel offset add optical-device flavor
- * without turning the result into decorative retro graphics.
+ * edges. The final vignette and tiny channel offset add optical-device
+ * character.
  */
 export function applyDeviceIspSignature(
   frame: ImageFrame,

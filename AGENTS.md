@@ -2,7 +2,7 @@
 
 This file is the navigation map for coding agents working on **pixel-era-compressor**.
 
-The project simulates 2000–2013 digital photo compression and early camera-device image quality. It is not a Y2K fashion filter, not a neon/chrome/cyber aesthetic filter, and not a generic "legacy" image effect.
+The project simulates 2000–2013 digital photo compression and early camera-device image quality.
 
 Agents must treat this repository as a documentation-as-code project: product rules, engineering rules, prompt templates, tests, linting, and CI are all part of the system.
 
@@ -38,7 +38,7 @@ Agents must treat this repository as a documentation-as-code project: product ru
    - Explain non-obvious imaging math, color transforms, compression decisions, and historical-device assumptions.
    - Do not write comments that merely repeat the code.
 
-7. The output image must look like old digital photography, not like broken modern compression.
+7. The output image must look like old digital photography.
    - Low pixels are required.
    - Visible hard jagged edges are a bug.
    - Use high-quality downscaling, soft optical degradation, sensor noise, dynamic-range loss, and JPEG artifacts in the correct order.
@@ -94,13 +94,15 @@ One-line description:
 A 2000–2013 digital photo compression simulator for early web images, camera phones, compact digital cameras, and pre-computational iPhone-era photography.
 ```
 
-Important distinction:
+Project focus:
 
 ```text
-This is not a Y2K fashion filter.
+Technical image degradation from 2000–2013 digital imaging.
 ```
 
-The project must avoid visual language associated with Y2K fashion aesthetics such as neon chrome, cyber stickers, retro-futuristic UI, anime sparkle overlays, or mall-pop graphic design. The focus is technical image degradation from 2000–2013 digital imaging.
+The project centers on early digital capture, early web sharing, camera-device
+constraints, sensor noise, dynamic-range loss, color response, optics, ISP
+behavior, and JPEG export.
 
 ---
 
@@ -337,11 +339,6 @@ Do not push.
 
 ## 11. When uncertain
 
-If the choice is between:
-
-- a quick effect that looks like broken modern compression
-- a slower pipeline that looks like real old digital photography
-
-choose the second.
-
-If a task asks for "old photo look", verify whether it means this repository's 2000–2013 digital-photo style. Do not introduce film, VHS, Y2K fashion, or 1990s aesthetics unless explicitly requested.
+For tasks asking for an "old photo look", anchor the interpretation to this
+repository's 2000–2013 digital-photo style and ask for clarification when the
+requested era or device model is unclear.

@@ -15,7 +15,7 @@ Use this template when asking an agent to work on Pixel Era Compressor.
   - docs/engineering/ARCHITECTURE.md
 - Product boundary:
   - This is a 2000–2013 digital photo compression simulator.
-  - This is not a Y2K fashion filter.
+  - It focuses on early digital capture, upload, and JPEG device traits.
 
 ## Requirements
 

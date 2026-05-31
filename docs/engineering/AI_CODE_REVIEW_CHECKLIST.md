@@ -5,8 +5,8 @@ Use this checklist for AI-generated code.
 ## 1. Product correctness
 
 - Does the change preserve the 2000–2013 digital photo scope?
-- Does it avoid Y2K fashion, film, VHS, or 1990s analog aesthetics unless explicitly requested?
-- Does output still look like old digital photography rather than broken modern compression?
+- Does it use technical-device visual language from early digital photography?
+- Does output still look like old digital photography?
 - Are hard jagged edges avoided?
 - Are device presets historically plausible?
 
@@ -35,12 +35,13 @@ Use this checklist for AI-generated code.
 - Does code fit the documented directory structure?
 - Does the change avoid introducing C/C++?
 
-## 5. Tests
+## 5. Validation
 
-- Are tests added for new pipeline behavior?
-- Are preset dimensions and IDs tested?
-- Do tests cover edge cases?
-- Can `pnpm test` run without external services?
+- Does TypeScript validation pass?
+- Does linting pass?
+- Does formatting pass?
+- Does documentation linting pass?
+- Do architecture checks pass?
 
 ## 6. Documentation
 

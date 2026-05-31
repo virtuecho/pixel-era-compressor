@@ -15,9 +15,8 @@ export type OpticalSoftnessOptions = {
 /**
  * Applies a subtle Gaussian-like softness after high-quality downscaling.
  *
- * This is not an aesthetic blur pass. It simulates limited lens resolving power
- * from early camera phones and compact digital cameras, and it helps prevent the
- * hard stair-step contours that make an image look like broken modern resize.
+ * This pass simulates limited lens resolving power from early camera phones and
+ * compact digital cameras while keeping edge transitions smooth.
  */
 export function applyOpticalSoftness(
   frame: ImageFrame,
@@ -42,8 +41,8 @@ export function applyOpticalSoftness(
 
   for (let y = 0; y < frame.height; y += 1) {
     for (let x = 0; x < frame.width; x += 1) {
-      // A four-neighbor cross blur is intentionally restrained: it softens edges
-      // without turning small images into a smeared modern blur filter.
+      // A four-neighbor cross blur is intentionally restrained: it softens edge
+      // transitions while preserving readable low-resolution detail.
       const center = pixelOffset(frame.width, x, y);
       const left = pixelOffset(frame.width, Math.max(0, x - 1), y);
       const right = pixelOffset(

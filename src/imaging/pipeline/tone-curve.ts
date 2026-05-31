@@ -35,8 +35,7 @@ function crushShadow(
  * Reduces dynamic range and applies mild color drift after noise is present.
  *
  * Early small-sensor JPEGs often clipped bright areas, lost shadow separation,
- * and carried unstable white balance. This step models those limits without
- * turning the output into a stylized film or VHS effect.
+ * and carried unstable white balance. This step models those device limits.
  */
 export function applyToneCurve(
   frame: ImageFrame,
@@ -94,7 +93,7 @@ export function applyToneCurve(
       const luma = red * 0.299 + green * 0.587 + blue * 0.114;
 
       // Apply saturation around luma after dynamic-range compression so color
-      // drift feels like camera processing rather than a decorative overlay.
+      // drift stays tied to camera processing.
       output.data[offset] = clampChannel(
         luma + (red - luma) * saturation + warmth - greenMagenta * 0.5,
       );

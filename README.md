@@ -16,9 +16,9 @@ digital cameras, early phone uploads, and blog-era JPEG workflows.
 
 ## What It Simulates
 
-Real early digital photos were not just “bad JPEGs.” They usually had low
-native resolution, soft optics, noisy sensors, limited dynamic range, uneven
-white balance, and device-specific sharpening.
+Real early digital photos combined low native resolution, soft optics,
+tone-dependent sensor noise, limited dynamic range, uneven white balance, and
+device-specific sharpening.
 
 Pixel Era Compressor keeps that order of operations intact:
 
@@ -27,11 +27,15 @@ decode
 -> crop or fit
 -> high-quality resize
 -> optical softness
--> sensor noise
+-> tone-aware sensor noise
 -> tone and color shift
 -> device ISP signature
 -> JPEG export
 ```
+
+Sensor noise is modeled as a digital-device texture. Shadows and low midtones
+get the strongest luma and chroma noise, midtones keep visible texture, and
+bright or clipped highlights stay comparatively cleaner.
 
 ## What You Can Do
 

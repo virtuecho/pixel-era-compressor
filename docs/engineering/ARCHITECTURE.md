@@ -134,7 +134,7 @@ decode
 -> crop or fit
 -> high-quality resize
 -> optical softness
--> sensor noise
+-> tone-aware sensor noise
 -> tone curve
 -> color shift
 -> device ISP
@@ -142,6 +142,10 @@ decode
 ```
 
 Do not move JPEG export earlier in the pipeline.
+
+The sensor noise step must derive per-pixel weights from luminance. Shadows and
+low midtones expose more luma and chroma noise, midtones retain texture, and
+bright or clipped regions are attenuated for cleaner highlights.
 
 ---
 
@@ -207,8 +211,7 @@ Example comment style:
 /**
  * Applies a very small Gaussian-like softness after high-quality downscaling.
  *
- * This is not a blur filter for aesthetics. It exists to avoid modern hard
- * stair-step edges and to imitate the limited optical resolving power of
- * early camera phones and compact digital cameras.
+ * This pass simulates the limited optical resolving power of early camera
+ * phones and compact digital cameras while keeping edge transitions smooth.
  */
 ```

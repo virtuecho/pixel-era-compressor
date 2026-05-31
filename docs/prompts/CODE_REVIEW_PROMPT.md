@@ -6,8 +6,8 @@ Review the current diff for Pixel Era Compressor.
 Focus on:
 
 1. 2000–2013 digital-photo scope
-2. avoiding Y2K fashion or generic vintage effects
-3. no hard jagged edges in the imaging pipeline
+2. technical-device visual language from early digital photography
+3. smooth edge handling in the imaging pipeline
 4. TypeScript strictness
 5. pnpm-only workflow
 6. documented architecture boundaries

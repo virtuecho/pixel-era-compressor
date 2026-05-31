@@ -14,7 +14,7 @@ It recreates the look of digital photos from **2000 to 2013**, including:
 - early consumer digital cameras
 - early DSLR output such as Canon EOS 300D
 
-The product is not a Y2K fashion filter. It does not simulate neon, chrome, cyber, mall-pop, retro-futuristic, or decorative 2000s fashion aesthetics. It simulates the technical limits of early digital photography.
+The product simulates the technical limits of early digital photography.
 
 ---
 
@@ -48,7 +48,7 @@ A 2000–2013 digital photo compression simulator for early web images, camera p
 
 ## 3. User problem
 
-Modern image compressors often create the wrong kind of degradation:
+Modern image compressors often emphasize these artifacts:
 
 ```text
 hard jagged edges
@@ -57,7 +57,7 @@ over-sharp contours
 obvious modern software artifacts
 ```
 
-However, real old digital photos usually looked different:
+Real old digital photos from the product era usually combined:
 
 ```text
 low resolution
@@ -70,7 +70,8 @@ unstable white balance
 device-specific color and sharpening
 ```
 
-The tool must make photos look as if they were captured or uploaded during the 2000–2013 digital-photo era, not merely damaged by a modern compressor.
+The tool should make photos look as if they were captured or uploaded during the
+2000–2013 digital-photo era.
 
 ---
 
@@ -90,18 +91,15 @@ The tool must make photos look as if they were captured or uploaded during the 2
 
 ---
 
-## 5. Non-goals
+## 5. Product focus
 
-The product must not become:
+The product centers on:
 
-- a Y2K fashion filter
-- a generic vintage filter
-- a film simulation app
-- a VHS effect generator
-- a 1990s analog camera simulator
-- an AI upscaler or image restoration tool
-- a beauty filter
-- a modern HDR/AI camera-look editor
+- 2000–2013 digital capture and upload constraints
+- early web and blog JPEG sharing
+- phone, compact camera, and early DSLR presets
+- historically plausible output sizes and JPEG quality
+- sensor noise, dynamic-range loss, color drift, softness, and ISP signatures
 
 ---
 
@@ -153,7 +151,7 @@ input image
 -> crop or fit to target aspect ratio
 -> high-quality downscale
 -> lens softness simulation
--> sensor noise simulation
+-> tone-aware sensor noise simulation
 -> dynamic range degradation
 -> color and white-balance shift
 -> device-specific ISP signature
@@ -170,7 +168,24 @@ input image
 -> export
 ```
 
-That incorrect pipeline produces broken modern compression, not old digital photography.
+The required pipeline preserves the visual order of old digital photography.
+
+### 7.2 Sensor noise distribution
+
+Sensor noise distribution follows per-pixel tone.
+
+For old digital devices:
+
+- Shadows and low midtones carry the strongest luma and chroma noise because
+  small sensors had weak signal-to-noise ratio in low light.
+- Midtones remain a visible texture carrier, especially on early phones and
+  compact cameras.
+- Bright areas are cleaner, and clipped highlights should become comparatively
+  smooth.
+
+Preset `lumaNoise` and `chromaNoise` values define the device's base noise
+strength. The pipeline derives per-pixel weights from luminance so the same
+preset does not add identical noise to shadows, midtones, and highlights.
 
 ---
 
@@ -321,7 +336,7 @@ MVP is acceptable when:
    - `canon-powershot-g1`
    - `canon-eos-300d`
 7. Exported images do not show obvious hard jagged edges.
-8. Output looks like low-pixel old digital photography, not modern broken compression.
+8. Output looks like low-pixel old digital photography.
 
 ---
 
@@ -333,7 +348,7 @@ MVP is acceptable when:
 - Batch upload and shared-setting conversion
 - Preset selection
 - High-quality resize
-- Softness, noise, tone curve
+- Softness, tone-aware sensor noise, tone curve
 - JPEG export
 - Basic tests
 
