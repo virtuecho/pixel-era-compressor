@@ -186,6 +186,19 @@ For old digital devices:
 Preset `lumaNoise` and `chromaNoise` values define the device's base noise
 strength. The pipeline derives per-pixel weights from luminance so the same
 preset does not add identical noise to shadows, midtones, and highlights.
+Some sensors also show slight neighboring-pixel correlation in luminance noise;
+`noiseCorrelation` controls that fine texture without creating visible blocks.
+Profiles may also use `detailNoiseSuppression` to reduce added noise where a
+3 × 3 neighborhood already contains strong luminance or color detail. This
+approximates detail-preserving camera denoising: smooth dark areas retain more
+visible noise while focused texture and edges receive less. It is a local
+texture heuristic, not subject recognition or a depth-of-field mask. The
+iPhone 3GS profile uses this control alongside its tone-dependent noise and
+neighboring-pixel correlation.
+Presets with `clipHighlightsToWhite` clip channels above their highlight
+threshold to white instead of pulling the brightest values back toward gray.
+The iPhone 3GS profile uses both options to match its patterned luminance grain
+and clipped highlight behavior in the reviewed samples.
 
 ---
 
@@ -228,8 +241,11 @@ type CameraPreset = {
   sensor: {
     lumaNoise: number;
     chromaNoise: number;
+    noiseCorrelation?: number;
+    detailNoiseSuppression?: number;
     dynamicRangeLoss: number;
     highlightClip: number;
+    clipHighlightsToWhite?: boolean;
     shadowCrush: number;
   };
 
@@ -270,7 +286,7 @@ These are engineering defaults for the first implementation. They are not claime
 | `motorola-zn5`       |    0.35 |       0.35 |         0.18 |    0.30 |           +0.08 |         0.25 |     58 |
 | `sony-ericsson-c905` |    0.28 |       0.28 |         0.14 |    0.28 |           +0.05 |         0.20 |     64 |
 | `nokia-n86-8mp`      |    0.26 |       0.30 |         0.15 |    0.27 |           +0.02 |         0.18 |     66 |
-| `iphone-3gs`         |    0.52 |       0.35 |         0.18 |    0.35 |           -0.02 |         0.10 |     52 |
+| `iphone-3gs`         |    0.30 |       0.16 |         0.04 |    0.18 |           +0.04 |         0.16 |     68 |
 | `iphone-4`           |    0.34 |       0.26 |         0.12 |    0.25 |           +0.02 |         0.18 |     62 |
 | `iphone-4s`          |    0.24 |       0.20 |         0.10 |    0.22 |           +0.04 |         0.16 |     70 |
 | `iphone-5`           |    0.22 |       0.18 |         0.09 |    0.20 |           +0.04 |         0.14 |     72 |
@@ -278,6 +294,18 @@ These are engineering defaults for the first implementation. They are not claime
 | `canon-powershot-g1` |    0.30 |       0.22 |         0.10 |    0.26 |           -0.03 |         0.08 |     78 |
 | `casio-qv-4000`      |    0.26 |       0.24 |         0.11 |    0.28 |           +0.02 |         0.10 |     76 |
 | `canon-eos-300d`     |    0.12 |       0.10 |         0.04 |    0.12 |           +0.01 |         0.06 |     86 |
+
+### iPhone 3GS calibration references
+
+- [iPhone 3GS sample photo album on Flickr](https://www.flickr.com/photos/rmohns/albums/72157620552767413/)
+- [Flickr photo with preserved iPhone 3GS EXIF on Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Apple_iPhone_3GS_from_flickr.jpg). The Commons copy is 1000 × 1333 pixels, so it is a visual reference rather than a native-resolution fixture.
+- [GSMArena's 2009 camera review](https://www.gsmarena.com/apple_iphone_3gs-review-369p7.php) reports visible, luminance-dominant patterned noise, including in daylight.
+- [PhoneScoop's camera review](https://www.phonescoop.com/articles/article.php?a=280&p=2104) reports warmer, higher-contrast output with clipped highlights and shadows, plus inconsistent white balance under fluorescent lighting.
+
+The 3GS profile uses these reports to guide visual tuning. The references cover
+different scenes, so the parameters remain approximations rather than fixed
+manufacturer specifications. Autofocus and touch-based metering depend on the
+capture scene and cannot be reconstructed from a flattened source image.
 
 ---
 

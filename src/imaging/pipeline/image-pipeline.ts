@@ -86,12 +86,15 @@ export function processPreparedFrame(
   const noisy = applySensorNoise(softened, {
     lumaNoise: preset.sensor.lumaNoise,
     chromaNoise: preset.sensor.chromaNoise,
+    noiseCorrelation: preset.sensor.noiseCorrelation,
+    detailNoiseSuppression: preset.sensor.detailNoiseSuppression,
     intensityScale: scale,
     seed: options.seed ?? preset.year,
   });
   const toned = applyToneCurve(noisy, {
     dynamicRangeLoss: preset.sensor.dynamicRangeLoss,
     highlightClip: preset.sensor.highlightClip,
+    clipHighlightsToWhite: preset.sensor.clipHighlightsToWhite,
     shadowCrush: preset.sensor.shadowCrush,
     saturationBias: preset.color.saturationBias,
     contrastBias: preset.color.contrastBias,

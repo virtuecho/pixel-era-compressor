@@ -28,6 +28,77 @@ function sampleFrame(): ImageFrame {
   );
 }
 
+function flatGrayFrame(
+  width: number,
+  height: number,
+  grayLevel = 128,
+): ImageFrame {
+  const data = new Uint8ClampedArray(width * height * 4);
+
+  for (let offset = 0; offset < data.length; offset += 4) {
+    data[offset] = grayLevel;
+    data[offset + 1] = grayLevel;
+    data[offset + 2] = grayLevel;
+    data[offset + 3] = 255;
+  }
+
+  return createImageFrame(width, height, data);
+}
+
+function shadowAndTextureFrame(width: number, height: number): ImageFrame {
+  const data = new Uint8ClampedArray(width * height * 4);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const offset = (y * width + x) * 4;
+      const isTexturedPatch = x >= 2 && x < width / 2 - 2;
+      const value = isTexturedPatch && (x + y) % 2 === 0 ? 84 : 52;
+
+      data[offset] = isTexturedPatch ? value : 68;
+      data[offset + 1] = isTexturedPatch ? value : 68;
+      data[offset + 2] = isTexturedPatch ? value : 68;
+      data[offset + 3] = 255;
+    }
+  }
+
+  return createImageFrame(width, height, data);
+}
+
+function averageRedNoise(
+  frame: ImageFrame,
+  xStart: number,
+  xEnd: number,
+): number {
+  let totalNoise = 0;
+  let sampleCount = 0;
+
+  for (let y = 2; y < frame.height - 2; y += 1) {
+    for (let x = xStart; x < xEnd; x += 1) {
+      const offset = (y * frame.width + x) * 4;
+      const expected = x < frame.width / 2 ? ((x + y) % 2 === 0 ? 84 : 52) : 68;
+
+      totalNoise += Math.abs(frame.data[offset] - expected);
+      sampleCount += 1;
+    }
+  }
+
+  return totalNoise / sampleCount;
+}
+
+function horizontalNoiseVariation(frame: ImageFrame): number {
+  let variation = 0;
+
+  for (let y = 0; y < frame.height; y += 1) {
+    for (let x = 1; x < frame.width; x += 1) {
+      const current = (y * frame.width + x) * 4;
+      const previous = (y * frame.width + x - 1) * 4;
+      variation += Math.abs(frame.data[current] - frame.data[previous]);
+    }
+  }
+
+  return variation;
+}
+
 // Most pipeline tests care that math stays in valid RGBA byte space. Exact
 // image aesthetics are preset-tuning concerns rather than unit-test fixtures.
 function expectValidChannels(frame: ImageFrame): void {
@@ -68,6 +139,77 @@ describe("pipeline steps", () => {
 
     expect(first.data).toEqual(second.data);
     expectValidChannels(first);
+  });
+
+  it("adds subtle spatial correlation to the 3GS luminance texture", () => {
+    const frame = flatGrayFrame(24, 24);
+    const baseOptions = {
+      lumaNoise: 0.42,
+      chromaNoise: 0.12,
+      intensityScale: 1,
+      seed: 2009,
+    } as const;
+    const uncorrelated = applySensorNoise(frame, {
+      ...baseOptions,
+      noiseCorrelation: 0,
+    });
+    const correlated = applySensorNoise(frame, {
+      ...baseOptions,
+      noiseCorrelation: 0.28,
+    });
+
+    expect(horizontalNoiseVariation(correlated)).toBeLessThan(
+      horizontalNoiseVariation(uncorrelated),
+    );
+  });
+
+  it("keeps 3GS noise restrained on evenly lit surfaces", () => {
+    const preset = findCameraPreset("iphone-3gs");
+
+    if (!preset) {
+      throw new Error("The iPhone 3GS preset must be available for this test.");
+    }
+
+    const frame = flatGrayFrame(48, 48, 200);
+    const output = applySensorNoise(frame, {
+      lumaNoise: preset.sensor.lumaNoise,
+      chromaNoise: preset.sensor.chromaNoise,
+      noiseCorrelation: preset.sensor.noiseCorrelation,
+      detailNoiseSuppression: preset.sensor.detailNoiseSuppression,
+      intensityScale: 1,
+      seed: preset.year,
+    });
+    let totalRedNoise = 0;
+
+    for (let offset = 0; offset < output.data.length; offset += 4) {
+      totalRedNoise += Math.abs(output.data[offset] - frame.data[offset]);
+    }
+
+    expect(totalRedNoise / (frame.width * frame.height)).toBeLessThan(1.3);
+  });
+
+  it("reduces 3GS noise on local detail while preserving smooth shadow noise", () => {
+    const frame = shadowAndTextureFrame(32, 16);
+    const baseOptions = {
+      lumaNoise: 0.42,
+      chromaNoise: 0.12,
+      noiseCorrelation: 0.28,
+      intensityScale: 1,
+      seed: 2009,
+    } as const;
+    const uniform = applySensorNoise(frame, baseOptions);
+    const detailAware = applySensorNoise(frame, {
+      ...baseOptions,
+      detailNoiseSuppression: 0.78,
+    });
+
+    expect(averageRedNoise(detailAware, 2, 14)).toBeLessThan(
+      averageRedNoise(uniform, 2, 14),
+    );
+    expect(averageRedNoise(detailAware, 18, 30)).toBeCloseTo(
+      averageRedNoise(uniform, 18, 30),
+      8,
+    );
   });
 
   it("keeps tone curve output within valid channel bounds", () => {
@@ -125,6 +267,29 @@ describe("pipeline steps", () => {
       "jpeg-export",
     ]);
     expectValidChannels(processed.frame);
+  });
+
+  it("clips 3GS highlights to white in the composed pipeline", () => {
+    const preset = findCameraPreset("iphone-3gs");
+
+    expect(preset).toBeDefined();
+
+    if (preset === undefined) {
+      throw new Error("Missing iphone-3gs preset.");
+    }
+
+    const frame = createImageFrame(
+      1,
+      1,
+      new Uint8ClampedArray([240, 240, 240, 255]),
+    );
+    const processed = processPreparedFrame(frame, preset, {
+      cropMode: "center-crop",
+      intensity: "normal",
+      seed: 2009,
+    });
+
+    expect([...processed.frame.data.slice(0, 3)]).toEqual([255, 255, 255]);
   });
 
   it("matches preset dimensions to the decoded image orientation", () => {

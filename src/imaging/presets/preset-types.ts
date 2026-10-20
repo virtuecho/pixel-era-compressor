@@ -18,8 +18,11 @@ export type OpticalProfile = {
 export type SensorProfile = {
   readonly lumaNoise: number;
   readonly chromaNoise: number;
+  readonly noiseCorrelation?: number;
+  readonly detailNoiseSuppression?: number;
   readonly dynamicRangeLoss: number;
   readonly highlightClip: number;
+  readonly clipHighlightsToWhite?: boolean;
   readonly shadowCrush: number;
 };
 

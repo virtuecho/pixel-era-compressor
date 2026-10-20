@@ -8,6 +8,7 @@ import {
 export type ToneCurveOptions = {
   readonly dynamicRangeLoss: number;
   readonly highlightClip: number;
+  readonly clipHighlightsToWhite?: boolean;
   readonly shadowCrush: number;
   readonly saturationBias: number;
   readonly contrastBias: number;
@@ -47,6 +48,8 @@ export function applyToneCurve(
     Math.min(0.42, options.dynamicRangeLoss * options.intensityScale * 0.36);
   const highlightCeiling =
     255 - Math.min(52, options.highlightClip * options.intensityScale * 58);
+  const highlightThreshold =
+    255 - Math.min(96, options.highlightClip * options.intensityScale * 100);
   const shadowThreshold = Math.min(
     92,
     options.shadowCrush * options.intensityScale * 96,
@@ -69,6 +72,8 @@ export function applyToneCurve(
       const red = transformChannel(
         frame.data[offset],
         highlightCeiling,
+        highlightThreshold,
+        options.clipHighlightsToWhite ?? false,
         shadowThreshold,
         shadowStrength,
         contrast,
@@ -77,6 +82,8 @@ export function applyToneCurve(
       const green = transformChannel(
         frame.data[offset + 1],
         highlightCeiling,
+        highlightThreshold,
+        options.clipHighlightsToWhite ?? false,
         shadowThreshold,
         shadowStrength,
         contrast,
@@ -85,6 +92,8 @@ export function applyToneCurve(
       const blue = transformChannel(
         frame.data[offset + 2],
         highlightCeiling,
+        highlightThreshold,
+        options.clipHighlightsToWhite ?? false,
         shadowThreshold,
         shadowStrength,
         contrast,
@@ -113,13 +122,21 @@ export function applyToneCurve(
 function transformChannel(
   value: number,
   highlightCeiling: number,
+  highlightThreshold: number,
+  clipHighlightsToWhite: boolean,
   shadowThreshold: number,
   shadowStrength: number,
   contrast: number,
   dynamicRangeScale: number,
 ): number {
-  // Channel order matters: clip highlights, crush shadows, adjust contrast, and
-  // finally compress overall range around mid-gray.
+  // Some devices clip sensor highlights directly to white. Other presets keep
+  // the earlier compressed-ceiling model until their response is calibrated.
+  if (clipHighlightsToWhite && value >= highlightThreshold) {
+    return 255;
+  }
+
+  // Channel order matters: limit highlights, crush shadows, adjust contrast,
+  // and finally compress overall range around mid-gray.
   const clipped = Math.min(highlightCeiling, value);
   const crushed = crushShadow(clipped, shadowThreshold, shadowStrength);
   const contrasted = (crushed - 128) * contrast + 128;
