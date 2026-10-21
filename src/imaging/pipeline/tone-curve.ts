@@ -14,7 +14,6 @@ export type ToneCurveOptions = {
   readonly contrastBias: number;
   readonly warmthBias: number;
   readonly greenMagentaBias: number;
-  readonly intensityScale: number;
 };
 
 function crushShadow(
@@ -43,28 +42,15 @@ export function applyToneCurve(
   options: ToneCurveOptions,
 ): ImageFrame {
   const output = createImageFrame(frame.width, frame.height);
-  const dynamicRangeScale =
-    1 -
-    Math.min(0.42, options.dynamicRangeLoss * options.intensityScale * 0.36);
-  const highlightCeiling =
-    255 - Math.min(52, options.highlightClip * options.intensityScale * 58);
-  const highlightThreshold =
-    255 - Math.min(96, options.highlightClip * options.intensityScale * 100);
-  const shadowThreshold = Math.min(
-    92,
-    options.shadowCrush * options.intensityScale * 96,
-  );
-  const shadowStrength = Math.min(
-    0.62,
-    options.shadowCrush * options.intensityScale * 0.76,
-  );
-  const contrast = 1 + options.contrastBias * options.intensityScale;
-  const saturation = Math.max(
-    0,
-    1 + options.saturationBias * options.intensityScale,
-  );
-  const warmth = options.warmthBias * options.intensityScale * 28;
-  const greenMagenta = options.greenMagentaBias * options.intensityScale * 34;
+  const dynamicRangeScale = 1 - Math.min(0.42, options.dynamicRangeLoss * 0.36);
+  const highlightCeiling = 255 - Math.min(52, options.highlightClip * 58);
+  const highlightThreshold = 255 - Math.min(96, options.highlightClip * 100);
+  const shadowThreshold = Math.min(92, options.shadowCrush * 96);
+  const shadowStrength = Math.min(0.62, options.shadowCrush * 0.76);
+  const contrast = 1 + options.contrastBias;
+  const saturation = Math.max(0, 1 + options.saturationBias);
+  const warmth = options.warmthBias * 28;
+  const greenMagenta = options.greenMagentaBias * 34;
 
   for (let y = 0; y < frame.height; y += 1) {
     for (let x = 0; x < frame.width; x += 1) {

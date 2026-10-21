@@ -10,7 +10,6 @@ export type SensorNoiseOptions = {
   readonly chromaNoise: number;
   readonly noiseCorrelation?: number;
   readonly detailNoiseSuppression?: number;
-  readonly intensityScale: number;
   readonly seed: number;
 };
 
@@ -130,8 +129,8 @@ export function applySensorNoise(
   options: SensorNoiseOptions,
 ): ImageFrame {
   const output = createImageFrame(frame.width, frame.height);
-  const lumaAmplitude = options.lumaNoise * options.intensityScale * 24;
-  const chromaAmplitude = options.chromaNoise * options.intensityScale * 18;
+  const lumaAmplitude = options.lumaNoise * 24;
+  const chromaAmplitude = options.chromaNoise * 18;
   const noiseCorrelation = Math.min(
     0.5,
     Math.max(0, options.noiseCorrelation ?? 0),

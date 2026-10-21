@@ -11,7 +11,6 @@ import {
   findCameraPreset,
   getDefaultCameraPreset,
 } from "../imaging/presets/camera-presets";
-import type { ProcessingIntensity } from "../imaging/presets/preset-types";
 import type { CropMode } from "../imaging/pipeline/crop-or-fit";
 import type {
   ImageWorkerRequest,
@@ -20,7 +19,7 @@ import type {
 } from "../imaging/workers/worker-protocol";
 
 // The UI treats each uploaded file as a job whose output depends on the current
-// preset, intensity, and crop mode. Changing settings makes old results stale
+// preset and crop mode. Changing settings makes old results stale
 // without discarding the user's selected files.
 type ImageJobStatus = "queued" | "processing" | "ready" | "error";
 
@@ -59,15 +58,6 @@ const cropModes = [
   readonly label: string;
 }[];
 
-const intensities = [
-  { value: "mild", label: "Mild" },
-  { value: "normal", label: "Normal" },
-  { value: "strong", label: "Strong" },
-] as const satisfies readonly {
-  readonly value: ProcessingIntensity;
-  readonly label: string;
-}[];
-
 const appIntro =
   "Pixel Era Compressor is a 2000-2013 digital photo compression simulator for early web images, camera phones, compact digital cameras, and pre-computational iPhone-era photography.";
 
@@ -94,10 +84,9 @@ export function App(): ReactElement {
   const [selectedPresetId, setSelectedPresetId] = useState(
     getDefaultCameraPreset().id,
   );
-  const [intensity, setIntensity] = useState<ProcessingIntensity>("normal");
   const [cropMode, setCropMode] = useState<CropMode>("center-crop");
   const preset = findCameraPreset(selectedPresetId) ?? getDefaultCameraPreset();
-  const processingConfigKey = `${preset.id}|${intensity}|${cropMode}`;
+  const processingConfigKey = `${preset.id}|${cropMode}`;
   const activeJob = useMemo(
     () => findActiveJob(imageJobs, activeJobId),
     [activeJobId, imageJobs],
@@ -297,7 +286,6 @@ export function App(): ReactElement {
       presetId: preset.id,
       options: {
         cropMode,
-        intensity,
         seed: preset.year,
       },
     };
@@ -326,7 +314,6 @@ export function App(): ReactElement {
   }, [
     cropMode,
     imageJobs,
-    intensity,
     isWorkerReady,
     preset.id,
     preset.year,
@@ -598,24 +585,6 @@ export function App(): ReactElement {
               selectedPresetId={preset.id}
               onPresetChange={setSelectedPresetId}
             />
-
-            <fieldset className="control-group">
-              <legend>Intensity</legend>
-              <div className="segmented-control">
-                {intensities.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    aria-pressed={item.value === intensity}
-                    onClick={() => {
-                      setIntensity(item.value);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
 
             <fieldset className="control-group">
               <legend>Crop mode</legend>

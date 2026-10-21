@@ -117,7 +117,6 @@ describe("pipeline steps", () => {
     const output = applyOpticalSoftness(sampleFrame(), {
       blurPx: 0.8,
       edgeSoftness: 0.7,
-      intensityScale: 1,
     });
 
     expectValidChannels(output);
@@ -127,13 +126,11 @@ describe("pipeline steps", () => {
     const first = applySensorNoise(sampleFrame(), {
       lumaNoise: 0.75,
       chromaNoise: 0.45,
-      intensityScale: 1,
       seed: 2002,
     });
     const second = applySensorNoise(sampleFrame(), {
       lumaNoise: 0.75,
       chromaNoise: 0.45,
-      intensityScale: 1,
       seed: 2002,
     });
 
@@ -146,7 +143,6 @@ describe("pipeline steps", () => {
     const baseOptions = {
       lumaNoise: 0.42,
       chromaNoise: 0.12,
-      intensityScale: 1,
       seed: 2009,
     } as const;
     const uncorrelated = applySensorNoise(frame, {
@@ -176,7 +172,6 @@ describe("pipeline steps", () => {
       chromaNoise: preset.sensor.chromaNoise,
       noiseCorrelation: preset.sensor.noiseCorrelation,
       detailNoiseSuppression: preset.sensor.detailNoiseSuppression,
-      intensityScale: 1,
       seed: preset.year,
     });
     let totalRedNoise = 0;
@@ -194,7 +189,6 @@ describe("pipeline steps", () => {
       lumaNoise: 0.42,
       chromaNoise: 0.12,
       noiseCorrelation: 0.28,
-      intensityScale: 1,
       seed: 2009,
     } as const;
     const uniform = applySensorNoise(frame, baseOptions);
@@ -221,7 +215,6 @@ describe("pipeline steps", () => {
       contrastBias: -0.06,
       warmthBias: 0.02,
       greenMagentaBias: 0.02,
-      intensityScale: 1,
     });
 
     expectValidChannels(output);
@@ -233,7 +226,6 @@ describe("pipeline steps", () => {
       denoiseStrength: 0.18,
       vignette: 0.05,
       chromaticAberration: 0.08,
-      intensityScale: 1,
     });
 
     expectValidChannels(output);
@@ -250,7 +242,6 @@ describe("pipeline steps", () => {
 
     const processed = processPreparedFrame(sampleFrame(), preset, {
       cropMode: "center-crop",
-      intensity: "normal",
       seed: 2002,
     });
 
@@ -285,7 +276,6 @@ describe("pipeline steps", () => {
     );
     const processed = processPreparedFrame(frame, preset, {
       cropMode: "center-crop",
-      intensity: "normal",
       seed: 2009,
     });
 

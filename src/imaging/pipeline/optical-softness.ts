@@ -9,7 +9,6 @@ import {
 export type OpticalSoftnessOptions = {
   readonly blurPx: number;
   readonly edgeSoftness: number;
-  readonly intensityScale: number;
 };
 
 /**
@@ -24,11 +23,7 @@ export function applyOpticalSoftness(
 ): ImageFrame {
   const blurStrength = Math.min(
     0.88,
-    Math.max(
-      0,
-      (options.blurPx * 0.55 + options.edgeSoftness * 0.35) *
-        options.intensityScale,
-    ),
+    Math.max(0, options.blurPx * 0.55 + options.edgeSoftness * 0.35),
   );
 
   if (blurStrength <= 0.001) {

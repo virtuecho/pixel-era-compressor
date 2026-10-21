@@ -1,8 +1,4 @@
-import type {
-  CameraPreset,
-  ProcessingIntensity,
-} from "../presets/preset-types";
-import { intensityScale } from "../presets/preset-types";
+import type { CameraPreset } from "../presets/preset-types";
 import type { CropMode } from "./crop-or-fit";
 import { applyDeviceIspSignature } from "./device-isp";
 import type { ImageFrame } from "./image-frame";
@@ -13,7 +9,6 @@ import { applyToneCurve } from "./tone-curve";
 
 export type ProcessImageOptions = {
   readonly cropMode: CropMode;
-  readonly intensity: ProcessingIntensity;
   readonly seed?: number;
 };
 
@@ -75,20 +70,17 @@ export function processPreparedFrame(
   preset: CameraPreset,
   options: ProcessImageOptions,
 ): ProcessedImage {
-  const scale = intensityScale[options.intensity];
   // The order follows the product spec: first optical limits, then sensor
   // behavior, then tone/color response, then the in-camera ISP signature.
   const softened = applyOpticalSoftness(frame, {
     blurPx: preset.optical.blurPx,
     edgeSoftness: preset.optical.edgeSoftness,
-    intensityScale: scale,
   });
   const noisy = applySensorNoise(softened, {
     lumaNoise: preset.sensor.lumaNoise,
     chromaNoise: preset.sensor.chromaNoise,
     noiseCorrelation: preset.sensor.noiseCorrelation,
     detailNoiseSuppression: preset.sensor.detailNoiseSuppression,
-    intensityScale: scale,
     seed: options.seed ?? preset.year,
   });
   const toned = applyToneCurve(noisy, {
@@ -100,14 +92,12 @@ export function processPreparedFrame(
     contrastBias: preset.color.contrastBias,
     warmthBias: preset.color.warmthBias,
     greenMagentaBias: preset.color.greenMagentaBias,
-    intensityScale: scale,
   });
   const ispFrame = applyDeviceIspSignature(toned, {
     sharpenHalo: preset.isp.sharpenHalo,
     denoiseStrength: preset.isp.denoiseStrength,
     vignette: preset.optical.vignette,
     chromaticAberration: preset.optical.chromaticAberration,
-    intensityScale: scale,
   });
 
   return {

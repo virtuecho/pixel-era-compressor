@@ -11,7 +11,6 @@ export type DeviceIspOptions = {
   readonly denoiseStrength: number;
   readonly vignette: number;
   readonly chromaticAberration: number;
-  readonly intensityScale: number;
 };
 
 /**
@@ -27,20 +26,10 @@ export function applyDeviceIspSignature(
   options: DeviceIspOptions,
 ): ImageFrame {
   const output = createImageFrame(frame.width, frame.height);
-  const denoiseStrength = Math.min(
-    0.55,
-    Math.max(0, options.denoiseStrength * options.intensityScale),
-  );
-  const sharpenStrength = Math.min(
-    0.85,
-    Math.max(0, options.sharpenHalo * options.intensityScale),
-  );
-  const vignetteStrength = Math.min(
-    0.35,
-    Math.max(0, options.vignette * options.intensityScale),
-  );
-  const channelShift =
-    options.chromaticAberration * options.intensityScale > 0.065 ? 1 : 0;
+  const denoiseStrength = Math.min(0.55, Math.max(0, options.denoiseStrength));
+  const sharpenStrength = Math.min(0.85, Math.max(0, options.sharpenHalo));
+  const vignetteStrength = Math.min(0.35, Math.max(0, options.vignette));
+  const channelShift = options.chromaticAberration > 0.065 ? 1 : 0;
   const centerX = (frame.width - 1) / 2;
   const centerY = (frame.height - 1) / 2;
   const maxRadius = Math.hypot(centerX, centerY) || 1;

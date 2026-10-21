@@ -64,16 +64,6 @@ export type CameraPreset = {
   readonly special?: SpecialProfile;
 };
 
-export type ProcessingIntensity = "mild" | "normal" | "strong";
-
-// Intensity scales the preset's existing character. It does not switch to a
-// separate effect; it simply applies the same historical profile more or less.
-export const intensityScale = {
-  mild: 0.65,
-  normal: 1,
-  strong: 1.35,
-} as const satisfies Record<ProcessingIntensity, number>;
-
 // Aspect ratio helpers keep crop/fit tests and preset validation numeric while
 // presets remain readable strings.
 export function aspectRatioValue(aspectRatio: AspectRatio): number {
