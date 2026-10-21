@@ -12,6 +12,7 @@ const requiredPresetIds = [
   "old-blog-800",
   "early-mobile-upload-1024",
   "nokia-7650",
+  "nokia-3660",
   "nokia-n95",
   "iphone-3gs",
   "iphone-4",
@@ -35,6 +36,20 @@ describe("camera presets", () => {
     const ids = cameraPresets.map((preset) => preset.id);
 
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("keeps one phone per year and one compact camera", () => {
+    const phones = cameraPresets.filter(
+      (preset) => preset.category === "phone",
+    );
+    const compactCameras = cameraPresets.filter(
+      (preset) => preset.category === "compact-camera",
+    );
+
+    expect(new Set(phones.map((preset) => preset.year)).size).toBe(
+      phones.length,
+    );
+    expect(compactCameras).toHaveLength(1);
   });
 
   it("keeps dimensions and aspect ratios plausible", () => {

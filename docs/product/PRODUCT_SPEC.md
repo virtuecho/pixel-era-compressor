@@ -115,26 +115,23 @@ The product centers on:
 
 ### 6.2 Phone presets
 
-| Preset ID            | Device             | Year | Output size | Ratio | Main camera notes              |
-| -------------------- | ------------------ | ---: | ----------: | ----: | ------------------------------ |
-| `nokia-7650`         | Nokia 7650         | 2002 |   640 × 480 |   4:3 | 0.3MP VGA                      |
-| `nokia-3660`         | Nokia 3660         | 2003 |   640 × 480 |   4:3 | 0.3MP VGA                      |
-| `nokia-n95`          | Nokia N95          | 2007 | 2592 × 1944 |   4:3 | 5MP Carl Zeiss AF              |
-| `motorola-zn5`       | Motorola ZN5       | 2008 | 2560 × 1920 |   4:3 | 5MP Kodak imaging, xenon flash |
-| `sony-ericsson-c905` | Sony Ericsson C905 | 2008 | 3264 × 2448 |   4:3 | 8.1MP Cyber-shot, xenon flash  |
-| `nokia-n86-8mp`      | Nokia N86 8MP      | 2009 | 3264 × 2448 |   4:3 | 8MP Carl Zeiss, 28mm wide lens |
-| `iphone-3gs`         | iPhone 3GS         | 2009 | 2048 × 1536 |   4:3 | 3MP still camera               |
-| `iphone-4`           | iPhone 4           | 2010 | 2592 × 1936 |  ~4:3 | 5MP still camera               |
-| `iphone-4s`          | iPhone 4S          | 2011 | 3264 × 2448 |   4:3 | 8MP camera                     |
-| `iphone-5`           | iPhone 5           | 2012 | 3264 × 2448 |   4:3 | 8MP iSight camera              |
-| `iphone-5s`          | iPhone 5s          | 2013 | 3264 × 2448 |   4:3 | 8MP, 1.5µm pixels, f/2.2       |
+| Preset ID            | Device             | Year | Output size | Ratio | Main camera notes             |
+| -------------------- | ------------------ | ---: | ----------: | ----: | ----------------------------- |
+| `nokia-7650`         | Nokia 7650         | 2002 |   640 × 480 |   4:3 | 0.3MP VGA                     |
+| `nokia-3660`         | Nokia 3660         | 2003 |   640 × 480 |   4:3 | 0.3MP VGA                     |
+| `nokia-n95`          | Nokia N95          | 2007 | 2592 × 1944 |   4:3 | 5MP Carl Zeiss AF             |
+| `sony-ericsson-c905` | Sony Ericsson C905 | 2008 | 3264 × 2448 |   4:3 | 8.1MP Cyber-shot, xenon flash |
+| `iphone-3gs`         | iPhone 3GS         | 2009 | 2048 × 1536 |   4:3 | 3MP still camera              |
+| `iphone-4`           | iPhone 4           | 2010 | 2592 × 1936 |  ~4:3 | 5MP still camera              |
+| `iphone-4s`          | iPhone 4S          | 2011 | 3264 × 2448 |   4:3 | 8MP camera                    |
+| `iphone-5`           | iPhone 5           | 2012 | 3264 × 2448 |   4:3 | 8MP iSight camera             |
+| `iphone-5s`          | iPhone 5s          | 2013 | 3264 × 2448 |   4:3 | 8MP, 1.5µm pixels, f/2.2      |
 
 ### 6.3 Digital camera presets
 
 | Preset ID            | Device                         | Year | Output size | Ratio | Notes                              |
 | -------------------- | ------------------------------ | ---: | ----------: | ----: | ---------------------------------- |
 | `canon-powershot-g1` | Canon PowerShot G1             | 2000 | 2048 × 1536 |   4:3 | 3.34MP 1/1.8 inch CCD, RAW support |
-| `casio-qv-4000`      | Casio QV-4000                  | 2001 | 2240 × 1680 |   4:3 | 4.1MP compact digital camera       |
 | `canon-eos-300d`     | Canon EOS 300D / Digital Rebel | 2003 | 3072 × 2048 |   3:2 | 6.3MP APS-C CMOS DSLR              |
 
 ---
@@ -283,16 +280,13 @@ These are engineering defaults for the first implementation. They are not claime
 | `nokia-7650`         |    0.95 |       0.75 |         0.45 |    0.55 |           -0.10 |         0.05 |     34 |
 | `nokia-3660`         |    0.90 |       0.72 |         0.42 |    0.52 |           -0.08 |         0.05 |     36 |
 | `nokia-n95`          |    0.45 |       0.40 |         0.22 |    0.35 |           +0.03 |         0.20 |     56 |
-| `motorola-zn5`       |    0.35 |       0.35 |         0.18 |    0.30 |           +0.08 |         0.25 |     58 |
 | `sony-ericsson-c905` |    0.28 |       0.28 |         0.14 |    0.28 |           +0.05 |         0.20 |     64 |
-| `nokia-n86-8mp`      |    0.26 |       0.30 |         0.15 |    0.27 |           +0.02 |         0.18 |     66 |
 | `iphone-3gs`         |    0.30 |       0.16 |         0.04 |    0.18 |           +0.04 |         0.16 |     68 |
 | `iphone-4`           |    0.34 |       0.26 |         0.12 |    0.25 |           +0.02 |         0.18 |     62 |
 | `iphone-4s`          |    0.24 |       0.20 |         0.10 |    0.22 |           +0.04 |         0.16 |     70 |
 | `iphone-5`           |    0.22 |       0.18 |         0.09 |    0.20 |           +0.04 |         0.14 |     72 |
 | `iphone-5s`          |    0.18 |       0.14 |         0.07 |    0.16 |           +0.03 |         0.12 |     76 |
 | `canon-powershot-g1` |    0.30 |       0.22 |         0.10 |    0.26 |           -0.03 |         0.08 |     78 |
-| `casio-qv-4000`      |    0.26 |       0.24 |         0.11 |    0.28 |           +0.02 |         0.10 |     76 |
 | `canon-eos-300d`     |    0.12 |       0.10 |         0.04 |    0.12 |           +0.01 |         0.06 |     86 |
 
 ### iPhone 3GS calibration references
@@ -315,10 +309,6 @@ capture scene and cannot be reconstructed from a flattened source image.
 
 - Upload image
 - Choose preset
-- Choose intensity:
-  - Mild
-  - Normal
-  - Strong
 - Choose crop mode:
   - center crop
   - fit inside
