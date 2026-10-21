@@ -65,6 +65,33 @@ describe("camera presets", () => {
     }
   });
 
+  it("gives each physical camera an explicit noise response profile", () => {
+    const physicalCameras = cameraPresets.filter(
+      (preset) => preset.category !== "web-preset",
+    );
+
+    for (const preset of physicalCameras) {
+      expect(preset.sensor.midtoneNoiseFloor).toBeDefined();
+      expect(preset.sensor.detailNoiseSuppression).toBeDefined();
+      expect(preset.sensor.midtoneNoiseFloor).toBeGreaterThanOrEqual(0);
+      expect(preset.sensor.midtoneNoiseFloor).toBeLessThanOrEqual(1);
+      expect(preset.sensor.detailNoiseSuppression).toBeGreaterThanOrEqual(0);
+      expect(preset.sensor.detailNoiseSuppression).toBeLessThanOrEqual(0.9);
+    }
+
+    const iphone3gs = physicalCameras.find(
+      (preset) => preset.id === "iphone-3gs",
+    );
+
+    expect(iphone3gs?.sensor).toMatchObject({
+      lumaNoise: 0.16,
+      chromaNoise: 0.04,
+      midtoneNoiseFloor: 0.76,
+      noiseCorrelation: 0.28,
+      detailNoiseSuppression: 0.78,
+    });
+  });
+
   it("sorts visible presets by era within every category", () => {
     const categories = new Set(cameraPresets.map((preset) => preset.category));
 

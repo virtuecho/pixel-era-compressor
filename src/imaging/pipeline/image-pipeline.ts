@@ -79,6 +79,7 @@ export function processPreparedFrame(
   const noisy = applySensorNoise(softened, {
     lumaNoise: preset.sensor.lumaNoise,
     chromaNoise: preset.sensor.chromaNoise,
+    midtoneNoiseFloor: preset.sensor.midtoneNoiseFloor,
     noiseCorrelation: preset.sensor.noiseCorrelation,
     detailNoiseSuppression: preset.sensor.detailNoiseSuppression,
     seed: options.seed ?? preset.year,

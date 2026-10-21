@@ -97,7 +97,6 @@ export type CameraPreset = {
   readonly sensor: SensorProfile;
   readonly color: ColorProfile;
   readonly isp: IspProfile;
-  readonly special?: SpecialProfile;
 };
 ```
 
@@ -143,9 +142,11 @@ decode
 
 Do not move JPEG export earlier in the pipeline.
 
-The sensor noise step must derive per-pixel weights from luminance. Shadows and
-low midtones expose more luma and chroma noise, midtones retain texture, and
-bright or clipped regions are attenuated for cleaner highlights.
+The sensor noise step derives per-pixel weights from luminance and device
+profile values. Shadows and low midtones expose more luma and chroma noise,
+midtone noise floors vary by camera, and bright or clipped regions are
+attenuated for cleaner highlights. Optional detail suppression reduces noise
+near strong local texture for profiles whose camera processing supports it.
 
 ---
 

@@ -34,11 +34,6 @@ export const webPresets = [
       sharpenHalo: 0.08,
       denoiseStrength: 0.1,
       jpegQuality: 48,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "none",
-      portraitTinyMode: true,
     },
   },
   {
@@ -72,10 +67,6 @@ export const webPresets = [
       sharpenHalo: 0.1,
       denoiseStrength: 0.1,
       jpegQuality: 58,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "none",
     },
   },
   {
@@ -109,10 +100,6 @@ export const webPresets = [
       sharpenHalo: 0.12,
       denoiseStrength: 0.12,
       jpegQuality: 64,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "none",
     },
   },
 ] as const satisfies readonly CameraPreset[];

@@ -181,17 +181,21 @@ For old digital devices:
   smooth.
 
 Preset `lumaNoise` and `chromaNoise` values define the device's base noise
-strength. The pipeline derives per-pixel weights from luminance so the same
-preset does not add identical noise to shadows, midtones, and highlights.
+strength. `midtoneNoiseFloor` controls how much of that strength remains away
+from the sensor's strongest midtone response. The pipeline combines it with
+shadow pressure and highlight attenuation so noise is not painted at a constant
+level over the whole image. Device profiles tune this response from sample
+photos; the 3GS retains its earlier calibrated value.
+
 Some sensors also show slight neighboring-pixel correlation in luminance noise;
 `noiseCorrelation` controls that fine texture without creating visible blocks.
-Profiles may also use `detailNoiseSuppression` to reduce added noise where a
-3 × 3 neighborhood already contains strong luminance or color detail. This
+Profiles may use `detailNoiseSuppression` to reduce added noise where a 3 × 3
+neighborhood already contains strong luminance or color detail. This
 approximates detail-preserving camera denoising: smooth dark areas retain more
 visible noise while focused texture and edges receive less. It is a local
-texture heuristic, not subject recognition or a depth-of-field mask. The
-iPhone 3GS profile uses this control alongside its tone-dependent noise and
-neighboring-pixel correlation.
+texture heuristic, not subject recognition or a depth-of-field mask. Each
+physical-camera profile uses its own strength where the reference images and
+reviews support such processing.
 Presets with `clipHighlightsToWhite` clip channels above their highlight
 threshold to white instead of pulling the brightest values back toward gray.
 The iPhone 3GS profile uses both options to match its patterned luminance grain
@@ -238,6 +242,7 @@ type CameraPreset = {
   sensor: {
     lumaNoise: number;
     chromaNoise: number;
+    midtoneNoiseFloor?: number;
     noiseCorrelation?: number;
     detailNoiseSuppression?: number;
     dynamicRangeLoss: number;
@@ -257,14 +262,6 @@ type CameraPreset = {
     sharpenHalo: number;
     denoiseStrength: number;
     jpegQuality: number;
-    chromaSubsampling: "4:2:0" | "4:2:2";
-  };
-
-  special?: {
-    flashStyle?: "none" | "led" | "xenon" | "true-tone";
-    ccdLook?: boolean;
-    wideAngleLook?: boolean;
-    portraitTinyMode?: boolean;
   };
 };
 ```
@@ -275,19 +272,19 @@ type CameraPreset = {
 
 These are engineering defaults for the first implementation. They are not claimed as manufacturer specifications.
 
-| Preset ID            | Blur px | Luma noise | Chroma noise | DR loss | Saturation bias | Sharpen halo | JPEG Q |
-| -------------------- | ------: | ---------: | -----------: | ------: | --------------: | -----------: | -----: |
-| `nokia-7650`         |    0.95 |       0.75 |         0.45 |    0.55 |           -0.10 |         0.05 |     34 |
-| `nokia-3660`         |    0.90 |       0.72 |         0.42 |    0.52 |           -0.08 |         0.05 |     36 |
-| `nokia-n95`          |    0.45 |       0.40 |         0.22 |    0.35 |           +0.03 |         0.20 |     56 |
-| `sony-ericsson-c905` |    0.28 |       0.28 |         0.14 |    0.28 |           +0.05 |         0.20 |     64 |
-| `iphone-3gs`         |    0.30 |       0.16 |         0.04 |    0.18 |           +0.04 |         0.16 |     68 |
-| `iphone-4`           |    0.34 |       0.26 |         0.12 |    0.25 |           +0.02 |         0.18 |     62 |
-| `iphone-4s`          |    0.24 |       0.20 |         0.10 |    0.22 |           +0.04 |         0.16 |     70 |
-| `iphone-5`           |    0.22 |       0.18 |         0.09 |    0.20 |           +0.04 |         0.14 |     72 |
-| `iphone-5s`          |    0.18 |       0.14 |         0.07 |    0.16 |           +0.03 |         0.12 |     76 |
-| `canon-powershot-g1` |    0.30 |       0.22 |         0.10 |    0.26 |           -0.03 |         0.08 |     78 |
-| `canon-eos-300d`     |    0.12 |       0.10 |         0.04 |    0.12 |           +0.01 |         0.06 |     86 |
+| Preset ID            | Blur px | Luma noise | Chroma noise | Midtone floor | Detail suppression | DR loss | Saturation bias | Sharpen halo | JPEG Q |
+| -------------------- | ------: | ---------: | -----------: | ------------: | -----------------: | ------: | --------------: | -----------: | -----: |
+| `nokia-7650`         |    0.95 |       0.45 |         0.24 |          0.38 |               0.04 |    0.55 |           -0.10 |         0.05 |     34 |
+| `nokia-3660`         |    0.90 |       0.42 |         0.22 |          0.42 |               0.06 |    0.52 |           -0.08 |         0.05 |     36 |
+| `nokia-n95`          |    0.45 |       0.34 |         0.16 |          0.50 |               0.18 |    0.35 |           +0.03 |         0.20 |     56 |
+| `sony-ericsson-c905` |    0.28 |       0.20 |         0.08 |          0.48 |               0.22 |    0.28 |           +0.05 |         0.20 |     64 |
+| `iphone-3gs`         |    0.30 |       0.16 |         0.04 |          0.76 |               0.78 |    0.18 |           +0.04 |         0.16 |     68 |
+| `iphone-4`           |    0.34 |       0.14 |        0.045 |          0.50 |               0.24 |    0.25 |           +0.02 |         0.18 |     62 |
+| `iphone-4s`          |    0.24 |       0.12 |         0.05 |          0.46 |               0.40 |    0.16 |           +0.02 |         0.16 |     70 |
+| `iphone-5`           |    0.22 |       0.11 |         0.04 |          0.40 |               0.58 |    0.20 |           +0.04 |         0.14 |     72 |
+| `iphone-5s`          |    0.18 |       0.10 |         0.03 |          0.64 |               0.05 |    0.18 |           +0.03 |         0.12 |     76 |
+| `canon-powershot-g1` |    0.30 |       0.18 |         0.07 |          0.46 |               0.12 |    0.26 |           -0.03 |         0.08 |     78 |
+| `canon-eos-300d`     |    0.12 |       0.08 |         0.03 |          0.30 |               0.02 |    0.12 |           +0.06 |         0.10 |     86 |
 
 ### iPhone 3GS calibration references
 
@@ -300,6 +297,9 @@ The 3GS profile uses these reports to guide visual tuning. The references cover
 different scenes, so the parameters remain approximations rather than fixed
 manufacturer specifications. Autofocus and touch-based metering depend on the
 capture scene and cannot be reconstructed from a flattened source image.
+
+See [Device reference and calibration audit](DEVICE_REFERENCE_AUDIT.md) for
+sample-photo sources and the reasoning behind every physical-camera profile.
 
 ---
 

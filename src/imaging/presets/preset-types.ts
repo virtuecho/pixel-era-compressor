@@ -4,10 +4,6 @@ export type PresetCategory = "web-preset" | "phone" | "compact-camera" | "dslr";
 
 export type AspectRatio = "4:3" | "3:2";
 
-export type ChromaSubsampling = "4:2:0" | "4:2:2";
-
-export type FlashStyle = "none" | "led" | "xenon" | "true-tone";
-
 export type OpticalProfile = {
   readonly blurPx: number;
   readonly edgeSoftness: number;
@@ -18,6 +14,7 @@ export type OpticalProfile = {
 export type SensorProfile = {
   readonly lumaNoise: number;
   readonly chromaNoise: number;
+  readonly midtoneNoiseFloor?: number;
   readonly noiseCorrelation?: number;
   readonly detailNoiseSuppression?: number;
   readonly dynamicRangeLoss: number;
@@ -37,14 +34,6 @@ export type IspProfile = {
   readonly sharpenHalo: number;
   readonly denoiseStrength: number;
   readonly jpegQuality: number;
-  readonly chromaSubsampling: ChromaSubsampling;
-};
-
-export type SpecialProfile = {
-  readonly flashStyle?: FlashStyle;
-  readonly ccdLook?: boolean;
-  readonly wideAngleLook?: boolean;
-  readonly portraitTinyMode?: boolean;
 };
 
 // A CameraPreset is data only: UI labels, output geometry, and the parameters
@@ -61,7 +50,6 @@ export type CameraPreset = {
   readonly sensor: SensorProfile;
   readonly color: ColorProfile;
   readonly isp: IspProfile;
-  readonly special?: SpecialProfile;
 };
 
 // Aspect ratio helpers keep crop/fit tests and preset validation numeric while

@@ -8,6 +8,7 @@ import {
 export type SensorNoiseOptions = {
   readonly lumaNoise: number;
   readonly chromaNoise: number;
+  readonly midtoneNoiseFloor?: number;
   readonly noiseCorrelation?: number;
   readonly detailNoiseSuppression?: number;
   readonly seed: number;
@@ -46,12 +47,17 @@ function midtonePresence(normalizedLuma: number): number {
   return 1 - Math.min(1, Math.abs(normalizedLuma - 0.42) / 0.42);
 }
 
-function toneNoiseWeights(normalizedLuma: number): {
+function toneNoiseWeights(
+  normalizedLuma: number,
+  midtoneNoiseFloor: number,
+): {
   readonly luma: number;
   readonly chroma: number;
 } {
   const shadowPressure = 1 - smoothstep(0.1, 0.46, normalizedLuma);
-  const midtoneTexture = 0.76 + midtonePresence(normalizedLuma) * 0.24;
+  const midtoneTexture =
+    midtoneNoiseFloor +
+    midtonePresence(normalizedLuma) * (1 - midtoneNoiseFloor);
   const highlightCleanliness =
     1 - smoothstep(0.66, 0.98, normalizedLuma) * 0.84;
 
@@ -131,6 +137,13 @@ export function applySensorNoise(
   const output = createImageFrame(frame.width, frame.height);
   const lumaAmplitude = options.lumaNoise * 24;
   const chromaAmplitude = options.chromaNoise * 18;
+  // Earlier profiles default to the original 0.76 floor. Device presets can
+  // lower it when their samples show cleaner midtones, without weakening the
+  // shadow-weighted noise that gives small sensors their low-light character.
+  const midtoneNoiseFloor = Math.min(
+    1,
+    Math.max(0, options.midtoneNoiseFloor ?? 0.76),
+  );
   const noiseCorrelation = Math.min(
     0.5,
     Math.max(0, options.noiseCorrelation ?? 0),
@@ -173,6 +186,7 @@ export function applySensorNoise(
           frame.data[offset + 1],
           frame.data[offset + 2],
         ),
+        midtoneNoiseFloor,
       );
       const detailStrength =
         detailNoiseSuppression > 0 ? localDetailStrength(frame, x, y) : 0;

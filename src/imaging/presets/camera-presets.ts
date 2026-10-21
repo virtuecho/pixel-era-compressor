@@ -19,8 +19,12 @@ const devicePresets = [
       chromaticAberration: 0.08,
     },
     sensor: {
-      lumaNoise: 0.75,
-      chromaNoise: 0.45,
+      // VGA originals are soft and low in detail; retain texture mainly in
+      // shadows instead of laying heavy grain across every midtone.
+      lumaNoise: 0.45,
+      chromaNoise: 0.24,
+      midtoneNoiseFloor: 0.38,
+      detailNoiseSuppression: 0.04,
       dynamicRangeLoss: 0.55,
       highlightClip: 0.42,
       shadowCrush: 0.48,
@@ -35,12 +39,6 @@ const devicePresets = [
       sharpenHalo: 0.05,
       denoiseStrength: 0.08,
       jpegQuality: 34,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "none",
-      ccdLook: true,
-      portraitTinyMode: true,
     },
   },
   {
@@ -58,8 +56,12 @@ const devicePresets = [
       chromaticAberration: 0.07,
     },
     sensor: {
-      lumaNoise: 0.72,
-      chromaNoise: 0.42,
+      // The 3660 keeps the same VGA ceiling, with a restrained sensor-noise
+      // floor and little detail masking to avoid inventing a modern ISP.
+      lumaNoise: 0.42,
+      chromaNoise: 0.22,
+      midtoneNoiseFloor: 0.42,
+      detailNoiseSuppression: 0.06,
       dynamicRangeLoss: 0.52,
       highlightClip: 0.4,
       shadowCrush: 0.45,
@@ -74,12 +76,6 @@ const devicePresets = [
       sharpenHalo: 0.05,
       denoiseStrength: 0.08,
       jpegQuality: 36,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "none",
-      ccdLook: true,
-      portraitTinyMode: true,
     },
   },
   {
@@ -97,8 +93,12 @@ const devicePresets = [
       chromaticAberration: 0.045,
     },
     sensor: {
-      lumaNoise: 0.4,
-      chromaNoise: 0.22,
+      // Original N95 samples show aggressive edge enhancement alongside
+      // noise reduction; preserve some grain but keep it off fine edges.
+      lumaNoise: 0.34,
+      chromaNoise: 0.16,
+      midtoneNoiseFloor: 0.5,
+      detailNoiseSuppression: 0.18,
       dynamicRangeLoss: 0.35,
       highlightClip: 0.24,
       shadowCrush: 0.28,
@@ -113,11 +113,6 @@ const devicePresets = [
       sharpenHalo: 0.2,
       denoiseStrength: 0.18,
       jpegQuality: 56,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "led",
-      ccdLook: false,
     },
   },
   {
@@ -135,8 +130,12 @@ const devicePresets = [
       chromaticAberration: 0.028,
     },
     sensor: {
-      lumaNoise: 0.28,
-      chromaNoise: 0.14,
+      // Full-size C905 samples are relatively clean in ordinary daylight;
+      // use modest noise with moderate detail-aware suppression.
+      lumaNoise: 0.2,
+      chromaNoise: 0.08,
+      midtoneNoiseFloor: 0.48,
+      detailNoiseSuppression: 0.22,
       dynamicRangeLoss: 0.28,
       highlightClip: 0.18,
       shadowCrush: 0.22,
@@ -151,10 +150,6 @@ const devicePresets = [
       sharpenHalo: 0.2,
       denoiseStrength: 0.22,
       jpegQuality: 64,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "xenon",
     },
   },
   {
@@ -174,6 +169,7 @@ const devicePresets = [
     sensor: {
       lumaNoise: 0.16,
       chromaNoise: 0.04,
+      midtoneNoiseFloor: 0.76,
       noiseCorrelation: 0.28,
       detailNoiseSuppression: 0.78,
       dynamicRangeLoss: 0.18,
@@ -191,10 +187,6 @@ const devicePresets = [
       sharpenHalo: 0.16,
       denoiseStrength: 0.08,
       jpegQuality: 68,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "none",
     },
   },
   {
@@ -212,8 +204,12 @@ const devicePresets = [
       chromaticAberration: 0.025,
     },
     sensor: {
-      lumaNoise: 0.26,
-      chromaNoise: 0.12,
+      // Same-scene reviews show finer, cleaner luminance grain than the 3GS,
+      // with little chroma noise; keep the profile mostly luminance-led.
+      lumaNoise: 0.14,
+      chromaNoise: 0.045,
+      midtoneNoiseFloor: 0.5,
+      detailNoiseSuppression: 0.24,
       dynamicRangeLoss: 0.25,
       highlightClip: 0.16,
       shadowCrush: 0.2,
@@ -228,10 +224,6 @@ const devicePresets = [
       sharpenHalo: 0.18,
       denoiseStrength: 0.18,
       jpegQuality: 62,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "led",
     },
   },
   {
@@ -249,15 +241,19 @@ const devicePresets = [
       chromaticAberration: 0.02,
     },
     sensor: {
-      lumaNoise: 0.2,
-      chromaNoise: 0.1,
-      dynamicRangeLoss: 0.22,
-      highlightClip: 0.14,
-      shadowCrush: 0.17,
+      // Reviews show wider usable range than the iPhone 4 and reduced color
+      // noise, while low-light detail still receives noticeable smoothing.
+      lumaNoise: 0.12,
+      chromaNoise: 0.05,
+      midtoneNoiseFloor: 0.46,
+      detailNoiseSuppression: 0.4,
+      dynamicRangeLoss: 0.16,
+      highlightClip: 0.12,
+      shadowCrush: 0.12,
     },
     color: {
-      saturationBias: 0.04,
-      contrastBias: 0.05,
+      saturationBias: 0.02,
+      contrastBias: 0.03,
       warmthBias: 0,
       greenMagentaBias: 0,
     },
@@ -265,10 +261,6 @@ const devicePresets = [
       sharpenHalo: 0.16,
       denoiseStrength: 0.18,
       jpegQuality: 70,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "led",
     },
   },
   {
@@ -286,8 +278,12 @@ const devicePresets = [
       chromaticAberration: 0.018,
     },
     sensor: {
-      lumaNoise: 0.18,
-      chromaNoise: 0.09,
+      // The iPhone 5 applies stronger low-light noise reduction than the 4S;
+      // texture in focused detail should stay cleaner than flat dark areas.
+      lumaNoise: 0.11,
+      chromaNoise: 0.04,
+      midtoneNoiseFloor: 0.4,
+      detailNoiseSuppression: 0.58,
       dynamicRangeLoss: 0.2,
       highlightClip: 0.12,
       shadowCrush: 0.15,
@@ -302,10 +298,6 @@ const devicePresets = [
       sharpenHalo: 0.14,
       denoiseStrength: 0.18,
       jpegQuality: 72,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "led",
     },
   },
   {
@@ -323,9 +315,13 @@ const devicePresets = [
       chromaticAberration: 0.015,
     },
     sensor: {
-      lumaNoise: 0.14,
-      chromaNoise: 0.07,
-      dynamicRangeLoss: 0.16,
+      // The 5s preserves luminance texture in skies and shadows instead of
+      // heavily smoothing it; its improved sensitivity allows less noise.
+      lumaNoise: 0.1,
+      chromaNoise: 0.03,
+      midtoneNoiseFloor: 0.64,
+      detailNoiseSuppression: 0.05,
+      dynamicRangeLoss: 0.18,
       highlightClip: 0.1,
       shadowCrush: 0.12,
     },
@@ -339,10 +335,6 @@ const devicePresets = [
       sharpenHalo: 0.12,
       denoiseStrength: 0.16,
       jpegQuality: 76,
-      chromaSubsampling: "4:2:0",
-    },
-    special: {
-      flashStyle: "true-tone",
     },
   },
   {
@@ -360,8 +352,13 @@ const devicePresets = [
       chromaticAberration: 0.025,
     },
     sensor: {
-      lumaNoise: 0.22,
-      chromaNoise: 0.1,
+      // G1 samples show long-exposure dark-frame subtraction; that is tied to
+      // shutter time, so this general profile stays clean without fake hot
+      // pixels and limits noise mainly in detail-bearing areas.
+      lumaNoise: 0.18,
+      chromaNoise: 0.07,
+      midtoneNoiseFloor: 0.46,
+      detailNoiseSuppression: 0.12,
       dynamicRangeLoss: 0.26,
       highlightClip: 0.17,
       shadowCrush: 0.2,
@@ -376,11 +373,6 @@ const devicePresets = [
       sharpenHalo: 0.08,
       denoiseStrength: 0.12,
       jpegQuality: 78,
-      chromaSubsampling: "4:2:2",
-    },
-    special: {
-      flashStyle: "xenon",
-      ccdLook: true,
     },
   },
   {
@@ -398,26 +390,26 @@ const devicePresets = [
       chromaticAberration: 0.014,
     },
     sensor: {
-      lumaNoise: 0.1,
-      chromaNoise: 0.04,
+      // The larger CMOS DSLR sensor is quieter; its default Parameter 1 JPEG
+      // is modeled through stronger contrast, saturation, and sharpening.
+      lumaNoise: 0.08,
+      chromaNoise: 0.03,
+      midtoneNoiseFloor: 0.3,
+      detailNoiseSuppression: 0.02,
       dynamicRangeLoss: 0.12,
       highlightClip: 0.08,
       shadowCrush: 0.1,
     },
     color: {
-      saturationBias: 0.01,
-      contrastBias: 0.03,
+      saturationBias: 0.06,
+      contrastBias: 0.07,
       warmthBias: 0.006,
       greenMagentaBias: 0,
     },
     isp: {
-      sharpenHalo: 0.06,
+      sharpenHalo: 0.1,
       denoiseStrength: 0.06,
       jpegQuality: 86,
-      chromaSubsampling: "4:2:2",
-    },
-    special: {
-      flashStyle: "xenon",
     },
   },
 ] as const satisfies readonly CameraPreset[];

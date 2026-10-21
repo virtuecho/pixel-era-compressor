@@ -183,6 +183,33 @@ describe("pipeline steps", () => {
     expect(totalRedNoise / (frame.width * frame.height)).toBeLessThan(1.3);
   });
 
+  it("lets device profiles lower noise outside the strongest midtones", () => {
+    const frame = flatGrayFrame(48, 48, 180);
+    const baseOptions = {
+      lumaNoise: 0.3,
+      chromaNoise: 0.1,
+      seed: 2010,
+    } as const;
+    const defaultFloor = applySensorNoise(frame, baseOptions);
+    const lowerFloor = applySensorNoise(frame, {
+      ...baseOptions,
+      midtoneNoiseFloor: 0.3,
+    });
+    let defaultNoise = 0;
+    let lowerFloorNoise = 0;
+
+    for (let offset = 0; offset < frame.data.length; offset += 4) {
+      defaultNoise += Math.abs(defaultFloor.data[offset] - frame.data[offset]);
+      lowerFloorNoise += Math.abs(lowerFloor.data[offset] - frame.data[offset]);
+    }
+
+    const pixelCount = frame.width * frame.height;
+
+    expect(lowerFloorNoise / pixelCount).toBeLessThan(
+      defaultNoise / pixelCount,
+    );
+  });
+
   it("reduces 3GS noise on local detail while preserving smooth shadow noise", () => {
     const frame = shadowAndTextureFrame(32, 16);
     const baseOptions = {
